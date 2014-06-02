@@ -40,7 +40,7 @@ class Mainwnd(tk.Tk, UI):
         self.apps = apps
         self.name = app_name(apps)
         self.devdata = app_devdata(apps)
-        self.columns = []
+        self.columns = get_columns()
         for p in self.devdata:
             for k in p.keys():
                 if k not in self.columns:
