@@ -4,16 +4,17 @@ import util.startup
 
 all_submodules = []
 
-'''
 try:
     import hm
     all_submodules.append(hm)
 except:
     pass
-'''
 
-import misc
-all_submodules.append(misc)
+try:
+    import misc
+    all_submodules.append(misc)
+except:
+    pass
 
 def main():
     util.startup.startup(*all_submodules)
