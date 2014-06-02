@@ -2,3 +2,7 @@
 	path = hm
 	url = https://github.com/ivanovev/hm.git
 	branch = master
+[submodule "misc"]
+	path = misc
+	url = https://github.com/ivanovev/misc.git
+	branch = master
