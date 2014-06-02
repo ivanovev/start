@@ -53,7 +53,7 @@ commit()
         (cd $i && git add ./* && git commit -m "$msg" && cd ..)
     done
     git add ./* && git commit -m "$msg"
-    #git push
+    git push --recurse-submodules=on-demand
 }
 
 case $1 in
