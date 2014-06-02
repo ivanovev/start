@@ -1,6 +1,7 @@
 
-import tkinter as tk
 import os, types
+import tkinter as tk
+from tkinter import filedialog
 from collections import OrderedDict as OD
 import pdb
 
@@ -107,7 +108,7 @@ class UI:
     def fileopen_cb(self, *args):
         default = self.get_initialfile(True)
         filetypes = self.get_filetypes()
-        fname = tk.filedialog.askopenfilename(title='Open', filetypes=filetypes, initialfile=default)
+        fname = filedialog.askopenfilename(title='Open', filetypes=filetypes, initialfile=default)
         if len(fname) == 0:
             return
         if hasattr(self, 'fileopen'):
@@ -128,7 +129,7 @@ class UI:
         if default == None:
             return
         filetypes = self.get_filetypes()
-        fname = tk.filedialog.asksaveasfilename(title='Save As', filetypes=filetypes, initialfile=default)
+        fname = filedialog.asksaveasfilename(title='Save As', filetypes=filetypes, initialfile=default)
         if len(fname) == 0:
             return
         if hasattr(self, 'filesave'):
