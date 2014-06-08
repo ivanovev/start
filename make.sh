@@ -57,6 +57,44 @@ commit()
     git push --recurse-submodules=on-demand
 }
 
+submodule_add()
+{
+    url="https://github.com/ivanovev/"
+    case $1 in
+    'ssh') shift
+        url="git@github.com:ivanovev/"
+        ;;
+    esac
+    echo "adding submodules: $@"
+    for m in $@; do
+        echo $m
+        git submodule add -b master ${url}$m.git
+    done
+}
+
+submodule_rm()
+{
+    for m in $@; do
+        echo $m
+        git submodule deinit -f $m
+        git rm -f $m
+        git rm -f --cached $m
+    done
+}
+
+submodule()
+{
+    echo $@
+    case $1 in
+    'add') shift
+        submodule_add $@
+        ;;
+    'rm') shift
+        submodule_rm $@
+        ;;
+    esac
+}
+
 case $1 in
 'ver')  update_version
         ;;
@@ -76,6 +114,9 @@ case $1 in
         tar -C /tmp -cvzf /tmp/${2}_doc.tgz html
         ;;
 'stats') find . -name '*.py' -print0 | xargs -0 cat | egrep -v '^[ \t]*$' | wc
+        ;;
+'submodule') shift
+        submodule $@
         ;;
 *)      echo 'invalid option'
         ;;
