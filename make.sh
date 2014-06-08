@@ -79,6 +79,7 @@ submodule_rm()
         git submodule deinit -f $m
         git rm -f $m
         git rm -f --cached $m
+        rm -rf .git/modules/$m
     done
 }
 
