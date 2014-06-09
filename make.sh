@@ -52,7 +52,8 @@ commit()
         echo $i
         (cd $i && git add ./* && git commit -m "$msg" && cd ..)
     done
-    git add ./* && git commit -m "$msg"
+    #git add ./* && git commit -m "$msg"
+    git add LICENSE make.sh README.md util && git commit -m "$msg"
     #git push --recurse-submodules=on-demand origin HEAD:master
     git push --recurse-submodules=on-demand
 }
