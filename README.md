@@ -4,7 +4,6 @@ start
 Monitoring and control program for various devices that I work with.
 
 How-to start:
-    git clone ...
-    git submodule update --init
-    git submodule foreach git pull origin master
+    git clone .../start.git
+    ./make.sh submodule add [hm|misc|...]
     python startall.py
