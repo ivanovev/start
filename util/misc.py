@@ -36,7 +36,12 @@ def app_name(apps):
         name = name.replace('start', '')
         name = name.replace('.exe', '')
         return name
-    return apps[0].__name__
+    a = apps[0]
+    if type(a) == str:
+        return a
+    elif type(a) == ModuleType:
+        return a.__name__
+    return ''
 
 def app_call_ret(ret):
     if ret:
