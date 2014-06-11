@@ -52,10 +52,7 @@ commit()
         echo $i
         (cd $i && git add ./* && git commit -m "$msg" && cd ..)
     done
-    for i in `git submodule --quiet foreach pwd`; do echo `basename $i` >> .gitignore; done
-    echo .gitmodule >> .gitignore
     git add . && git commit -m "$msg"
-    rm -f .gitignore
     #git add freeze.bat LICENSE make.sh README.md startall.py util && git commit -m "$msg"
     #git push --recurse-submodules=on-demand origin HEAD:master
     git push --recurse-submodules=on-demand
