@@ -10,6 +10,9 @@ name=`basename $path`
 out="/tmp/${name}.tgz"
 smb="/mnt/smb3"
 allsubmodules="hm misc ctl fio br"
+urlhttps="https://github.com/ivanovev/"
+urlssh="git@github.com:ivanovev/"
+url=$urlhttps
 
 update_version()
 {
@@ -72,16 +75,14 @@ commit()
 
 submodule_add()
 {
-    url="https://github.com/ivanovev/"
-    case $1 in
-    'ssh') shift
-        url="git@github.com:ivanovev/"
-        ;;
-    esac
-    submodules=$@
-    if [ $submodules == "all" ]; then submodules=$allsubmodules; fi
-    echo "adding submodules: $submodules"
-    for m in $submodules; do
+    #url="https://github.com/ivanovev/"
+    #case $1 in
+    #'ssh') shift
+    #    url="git@github.com:ivanovev/"
+    #    ;;
+    #esac
+    echo "adding submodules: $@"
+    for m in $@; do
         echo $m
         git submodule add -b master ${url}$m.git
     done
@@ -101,12 +102,23 @@ submodule_rm()
 submodule()
 {
     echo $@
-    case $1 in
-    'add') shift
-        submodule_add $@
+    opt=$1
+    shift
+    if [ "$1" == "ssh" ]
+    then
+        shift
+        url=$urlssh
+    fi
+    submodules=$@
+    if [ "$1" == "all" ]; then submodules=$allsubmodules; fi
+    echo $opt $url $submodules
+    case $opt in
+    'add') submodule_add $submodules
         ;;
-    'rm') shift
-        submodule_rm $@
+    'rm') submodule_rm $submodules
+        ;;
+    *) echo 'invalid option: $1'
+        return
         ;;
     esac
 }
