@@ -9,6 +9,7 @@ path=`pwd`
 name=`basename $path`
 out="/tmp/${name}.tgz"
 smb="/mnt/smb3"
+allsubmodules="hm misc"
 
 update_version()
 {
@@ -77,8 +78,10 @@ submodule_add()
         url="git@github.com:ivanovev/"
         ;;
     esac
-    echo "adding submodules: $@"
-    for m in $@; do
+    submodules=$@
+    if [ $submodules == "all" ]; then submodules=$allsubmodules; fi
+    echo "adding submodules: $submodules"
+    for m in $submodules; do
         echo $m
         git submodule add -b master ${url}$m.git
     done
