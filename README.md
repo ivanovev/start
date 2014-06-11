@@ -12,4 +12,5 @@ Minimum requirements:
     python3  
     matplotlib  
     numpy  
+    pyserial  
 
