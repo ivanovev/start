@@ -53,7 +53,7 @@ commit()
     do
         echo $i
         (cd $i && git add ./* && git commit -m "$msg" && git push)
-        git rm --cached $i
+        git rm -f --cached $i
     done
     if [ -f .gitmodules ]
     then
