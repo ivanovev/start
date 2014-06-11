@@ -9,7 +9,7 @@ path=`pwd`
 name=`basename $path`
 out="/tmp/${name}.tgz"
 smb="/mnt/smb3"
-allsubmodules="hm misc"
+allsubmodules="hm misc ctl"
 
 update_version()
 {
