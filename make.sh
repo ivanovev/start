@@ -52,18 +52,19 @@ commit()
     do
         echo $i
         (cd $i && git add ./* && git commit -m "$msg" && git push)
-        git rm --cached $i && echo $i >> .gitignore
+        git rm --cached $i
     done
-    git rm -f --cached .gitmodules && echo .gitmodules >> .gitignore
-    echo .gitignore >> .gitignore
+    git rm -f --cached .gitmodules
     read
-    git add . && git commit -m "$msg" && git push
+    git add freeze.bat LICENSE make.sh README.md startall.py util && git commit -m "$msg" && git push
     for i in $submodules
     do
         git add $i
     done
-    git add .gitmodules
-    rm -f .gitignore
+    if [ -f .gitmodules ]
+    then
+        git add .gitmodules
+    fi
     #git push --recurse-submodules=on-demand origin HEAD:master
     #git push --recurse-submodules=on-demand
 }
