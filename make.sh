@@ -54,7 +54,8 @@ commit()
         (cd $i && git add ./* && git commit -m "$msg" && git push)
         git rm --cached $i && echo $i >> .gitignore
     done
-    git rm --cached .gitmodules && echo .gitmodules >> .gitignore
+    git rm -f --cached .gitmodules && echo .gitmodules >> .gitignore
+    echo .gitignore >> .gitignore
     read
     git add . && git commit -m "$msg" && git push
     for i in $submodules
