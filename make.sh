@@ -56,7 +56,7 @@ commit()
     done
     if [ -f .gitmodules ]
     then
-        git rm -f --cached .gitmodules
+        git rm --cached .gitmodules
     fi
     git add freeze.bat LICENSE make.sh README.md startall.py util && git commit -m "$msg" && git push
     for i in $submodules
@@ -67,8 +67,6 @@ commit()
     then
         git add .gitmodules
     fi
-    #git push --recurse-submodules=on-demand origin HEAD:master
-    #git push --recurse-submodules=on-demand
 }
 
 submodule_add()
