@@ -8,7 +8,9 @@ How-to start:
     ./make.sh submodule add [hm|misc|...]  
     python startall.py  
 
-Minimum requirements:  
+Note: make.sh simply adds submodule to the source tree, it's also possible to add modules manually
+
+Requirements:  
     python3  
     matplotlib  
     numpy  
