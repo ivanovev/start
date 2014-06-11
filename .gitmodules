@@ -1,8 +1,0 @@
-[submodule "hm"]
-	path = hm
-	url = git@github.com:ivanovev/hm.git
-	branch = master
-[submodule "misc"]
-	path = misc
-	url = git@github.com:ivanovev/misc.git
-	branch = master
