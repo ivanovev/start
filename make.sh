@@ -53,7 +53,7 @@ commit()
         (cd $i && git add ./* && git commit -m "$msg" && cd ..)
     done
     #git add ./* && git commit -m "$msg"
-    git add freeze.bat LICENSE make.sh README.md util && git commit -m "$msg"
+    git add freeze.bat LICENSE make.sh README.md startall.py util && git commit -m "$msg"
     #git push --recurse-submodules=on-demand origin HEAD:master
     git push --recurse-submodules=on-demand
 }
