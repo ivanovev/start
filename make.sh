@@ -9,7 +9,7 @@ path=`pwd`
 name=`basename $path`
 out="/tmp/${name}.tgz"
 smb="/mnt/smb3"
-allsubmodules="hm misc ctl fio"
+allsubmodules="hm misc ctl fio br"
 
 update_version()
 {
@@ -125,6 +125,8 @@ case $1 in
 'commit') clean
         update_version
         commit
+        ;;
+'pull') git pull --recurse-submodules=yes
         ;;
 'doc')  doxygen $2/config.dox
         tar -C /tmp -cvzf /tmp/${2}_doc.tgz html
