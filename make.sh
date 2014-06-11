@@ -47,15 +47,23 @@ commit()
         exit 1
     fi
     read -p "Commit message: " -e msg
-    for i in `git submodule --quiet foreach pwd`
+    submodules=$(for i in $(git submodule foreach --quiet pwd); do basename $i; done)
+    for i in $submodules
     do
         echo $i
-        (cd $i && git add ./* && git commit -m "$msg" && cd ..)
+        (cd $i && git add ./* && git commit -m "$msg" && git push)
+        git rm --cached $i
     done
-    git add . && git commit -m "$msg"
+    git rm --cached .gitmodules
+    git add . && git commit -m "$msg" && git push
+    for i in $submodules
+    do
+        git add $i
+    done
+    git add .gitmodules
     #git add freeze.bat LICENSE make.sh README.md startall.py util && git commit -m "$msg"
     #git push --recurse-submodules=on-demand origin HEAD:master
-    git push --recurse-submodules=on-demand
+    #git push --recurse-submodules=on-demand
 }
 
 submodule_add()
