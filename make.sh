@@ -54,8 +54,10 @@ commit()
         (cd $i && git add ./* && git commit -m "$msg" && git push)
         git rm --cached $i
     done
-    git rm -f --cached .gitmodules
-    read
+    if [ -f .gitmodules ]
+    then
+        git rm -f --cached .gitmodules
+    fi
     git add freeze.bat LICENSE make.sh README.md startall.py util && git commit -m "$msg" && git push
     for i in $submodules
     do
