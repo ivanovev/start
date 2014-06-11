@@ -3,7 +3,7 @@
 import util.startup
 
 def main():
-    all_submodules = ['hm', 'misc', 'ctl', 'fio', 'br']
+    all_submodules = ['hm', 'misc', 'ctl', 'br']
     util.startup.startup(*all_submodules)
 
 if __name__ == '__main__':
