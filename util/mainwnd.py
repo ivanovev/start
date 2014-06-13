@@ -74,10 +74,12 @@ class Mainwnd(tk.Tk, UI):
                 menu_add.add_command(label=cat, command=f)
 
         try:
+            menu_tools = tk.Menu(self.menubar, tearoff=0)
+            self.menubar.add_cascade(menu=menu_tools, label='Tools')
+            from .plot import plot_menus
+            self.add_menus(plot_menus(), menu_tools)
             m = app_tools(self.apps)
             if m:
-                menu_tools = tk.Menu(self.menubar, tearoff=0)
-                self.menubar.add_cascade(menu=menu_tools, label='Tools')
                 self.add_menus(m, menu_tools)
         except:
             pass

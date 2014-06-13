@@ -1,0 +1,289 @@
+
+import pylab
+from matplotlib.dates import DateFormatter, MinuteLocator, HourLocator
+from matplotlib.figure import Figure
+from matplotlib.ticker import ScalarFormatter
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+
+from argparse import ArgumentParser
+from collections import OrderedDict as OD
+from datetime import datetime, timedelta
+from itertools import chain
+
+import tkinter as tk
+import tkinter.ttk as ttk
+
+from ..control import Control
+from ..monitor import Monitor
+
+from .plotdata import PlotData
+from .setup import get_cmdsx
+
+import sys, pdb
+
+class Plot(Monitor):
+    def __init__(self, mode, apps, args):
+        data = PlotData()
+        data.from_args(mode, apps, args)
+        self.parse_savefig(args)
+        self.mode = mode
+        Monitor.__init__(self, data=data)
+        self.root.title('Plot f(x)' if mode == 'fx' else 'Plot f(t)')
+        self.fileext = 'csv'
+        self.stop = False
+        #self.after_plot = self.root.after_idle(self.io.start)
+
+    def add_menu_view(self):
+        menu_view = tk.Menu(self.menubar, tearoff=0)
+        self.menubar.add_cascade(menu=menu_view, label='View')
+        self.grid = tk.StringVar(value=1)
+        menu_view.add_checkbutton(label='Grid', variable=self.grid, command=self.redraw_all)
+        menu_view.add_separator()
+        cmds = self.data['y']
+        for k,v in cmds.items():
+            v.view = tk.StringVar(value=1)
+            menu_view.add_checkbutton(label=v.label, variable=v.view, command=self.redraw_all)
+
+    def add_menu_edit(self):
+        if self.mode == 'ft':
+            menu_edit = tk.Menu(self.menubar, tearoff=0)
+            self.menubar.add_cascade(menu=menu_edit, label='Edit')
+            menu_edit.add_command(label='Span', command=self.edit_span)
+
+    def edit_span(self):
+        data = get_cmdsx('ft')
+        for i in ['span', 'dt']:
+            data.set_value(i, self.data.get_value(i))
+            data.set_value('%sunits' % i, self.data.get_value('%sunits' % i))
+        dlg = Control(data=data, parent=self.root, title='Edit time span', pady=5)
+        dlg.add_buttons_ok_cancel()
+        dlg.do_modal()
+        if not hasattr(dlg, 'kw'):
+            return
+        if self.plot_upd:
+            self.root.after_cancel(self.plot_upd)
+        for i in ['span', 'dt']:
+            self.data.set_value(i, dlg.kw[i])
+            self.data.set_value('%sunits' % i, dlg.kw['%sunits' % i])
+        self.update_formatter()
+        self.root.after_idle(self.io.start)
+
+    def update_formatter(self):
+        if self.mode == 'ft':
+            span = self.data.get_seconds('span')
+            mm = span/60
+            if mm < 120:
+                interval = 1
+                if mm > 20:
+                    interval = int(mm/10)
+                self.formatter = DateFormatter('%H:%M')
+                self.locator = MinuteLocator(interval=interval)
+            else:
+                self.formatter = DateFormatter('%H')
+                self.locator = HourLocator()
+        else:
+            self.formatter = ScalarFormatter(useOffset=False)
+
+    def init_layout(self):
+        self.add_menu_file(file_open=False, file_save=False, file_saveas=False, file_export=True)
+        self.add_menu_edit()
+        self.add_menu_view()
+        self.root.protocol('WM_DELETE_WINDOW', self.exit_cb)
+        self.fig = Figure(figsize=(5,4), dpi=100)
+        canvas = FigureCanvasTkAgg(self.fig, master=self.frame)
+        canvas.show()
+        canvas.get_tk_widget().pack(fill=tk.BOTH, expand=1)
+        self.add_fb()
+        fl = tk.Frame(self.fb)
+        fl.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
+        toolbar = NavigationToolbar2TkAgg(canvas, fl)
+        toolbar.update()
+        canvas._tkcanvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
+        fr = tk.Frame(self.fb)
+        fr.pack(side=tk.RIGHT, fill=tk.Y, expand=0)
+        self.pause = tk.StringVar(value=0)
+        cb = ttk.Checkbutton(fr, text='Pause', variable=self.pause, command=self.redraw_all)
+        cb.pack(side=tk.RIGHT, expand=0)
+
+        self.silent = (self.mode == 'ft')
+        self.xlim = self.get_xlim()
+        cmds = self.data['y']
+        self.update_formatter()
+        i = 0
+        l = len(cmds)
+        for k,v in cmds.items():
+            v.t = tk.StringVar()
+            v.l = tk.StringVar(value=1)
+            i = i + 1
+            v.sp = l*100 + 10 + i
+            v.ax = self.fig.add_subplot(v.sp)
+            v.xx = [[]]
+            v.yy = [[]]
+            if i == 9: break
+            self.ax_init(v)
+            if self.mode == 'ft':
+                v.ax.plot_date(pylab.date2num([]), [], 'b')
+
+    def ax_init(self, v):
+        v.ax.set_title(v.label)
+        v.ax.set_xlim(self.xlim)
+        if self.mode == 'ft':
+            v.ax.xaxis.set_major_locator(self.locator)
+        v.ax.xaxis.set_major_formatter(self.formatter)
+        if int(self.grid.get()):
+            v.ax.grid()
+
+    def get_xlim(self):
+        self.data.select(self.mode)
+        if self.mode == 'fx':
+            x1 = self.data.get_value('min')
+            x2 = self.data.get_value('max')
+            return [float(x1), float(x2)]
+        elif self.mode == 'ft':
+            span = self.data.get_seconds('span')
+            t2 = datetime.now()
+            dT = timedelta(0, span)
+            t1 = t2 - dT
+            return pylab.date2num([t1, t2])
+
+    def set_err_mode(self):
+        if self.mode == 'fx':
+            self.stop = True
+
+    def exit_cb(self, *args):
+        self.root.withdraw()
+        self.root.destroy()
+        sys.exit(0)
+
+    def init_io(self):
+        del self.io[:]
+        self.io.add(self.plot_cb1, self.mntr_cb2, self.plot_cb3, self.cmdio_thread)
+
+    def plot_cb1(self):
+        self.plot_upd = None
+        if self.stop:
+            self.exit_cb()
+            return
+        elif self.mode == 'fx':
+            if not hasattr(self, 'x'):
+                self.data.select('fx')
+                self.x = float(self.data.get_value('min'))
+                self.step = float(self.data.get_value('step'))
+            else:
+                self.x += self.step
+            self.data.select('x')
+            k,v = list(self.data.cmds.items())[0]
+            #print(k, self.x, v.dev)
+            self.data.set_value(k, '%g' % self.x)
+            self.data.do_cmds(self.qo, read=False)
+            dt = self.data.get_seconds('dt')
+            self.qo.put('sleep %d' % dt)
+        elif self.mode == 'ft':
+            self.xlim = self.get_xlim()
+            self.x = self.xlim[1]
+        self.read = True
+        self.data.select('y')
+        self.data.do_cmds(self.qo, read=True)
+        return True
+
+    def plot_cb3(self):
+        x = self.x
+        cmds = self.data['y']
+        kk = list(cmds.keys())
+        fig = self.fig
+        xlim = self.xlim
+        pause = int(self.pause.get())
+        for k,v in cmds.items():
+            val = v['t'].get()
+            v['t'].set('')
+            if val == '' and not self.silent:
+                #print('end_cb return')
+                return
+            xx = v['xx'][-1]
+            yy = v['yy'][-1]
+            if val == '' and len(xx) != 0:
+                v['xx'].append([])
+                v['yy'].append([])
+            if val != '':
+                yy.append(float(val))
+                xx.append(x)
+            x0 = v['xx'][0]
+            y0 = v['yy'][0]
+            if len(x0):
+                xx0 = x0[0]
+                if xx0 < xlim[0]:
+                    x0.pop(0)
+                    y0.pop(0)
+            if len(x0) == 0 and len(v['xx']) > 1:
+                v['xx'].pop(0)
+                v['yy'].pop(0)
+        self.redraw_all()
+        if self.mode == 'ft':
+            dt = self.data.get_milliseconds('dt')
+            self.plot_upd = self.root.after(dt, self.io.start)
+        elif self.mode == 'fx':
+            self.data.select('fx')
+            if float(self.data.get_value('max')) < self.x + self.step/2:
+                if self.savefig:
+                    self.savefig_and_exit()
+                return
+            self.root.after_idle(self.io.start)
+
+    def redraw_all(self):
+        pause = int(self.pause.get())
+        if pause:
+            return
+        xlim = self.xlim
+        cmds = self.data['y']
+        num = 0
+        for k,v in cmds.items():
+            view = int(v.view.get())
+            if not view:
+                v.ax.set_visible(False)
+                continue
+            else:
+                v.ax.set_visible(True)
+                num = num + 1
+        numi = 1
+        for k,v in cmds.items():
+            view = int(v.view.get())
+            if not view:
+                continue
+            v.ax.clear()
+            v.ax.change_geometry(num, 1, numi)
+            numi = numi + 1
+            for i in range(0, len(v['xx'])):
+                xi = v['xx'][i]
+                yi = v['yy'][i]
+                if self.mode == 'fx':
+                    v.ax.plot(xi, yi, 'b')
+                else:
+                    v.ax.plot_date(xi, yi, 'b')
+            self.ax_init(v)
+        pylab.draw()
+        self.fig.canvas.draw()
+
+    def filesave(self, fname):
+        if self.mode == 'fx':
+            f = open(fname, 'w')
+            cmds = self.data['y']
+            vv = [v for v in cmds.values()]
+            xx = list(chain(*vv[0]['xx']))
+            yy = [list(chain(*v['yy'])) for v in vv]
+            for i in range(0, len(xx)):
+                yyi = [k[i] for k in yy]
+                f.write(','.join(['%g' % j for j in [xx[i]] + yyi]) + '\n')
+            f.close()
+
+    def parse_savefig(self, args):
+        parser = ArgumentParser()
+        parser.add_argument('--savefig', nargs='*', default=[], help='save figure')
+        args, extra_args = parser.parse_known_args()
+        self.savefig = args.savefig
+        print(self.savefig)
+
+    def savefig_and_exit(self):
+        for i in self.savefig:
+            self.fig.savefig(i)
+        sys.exit(0)
+
