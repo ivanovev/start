@@ -96,6 +96,7 @@ submodule_rm()
         git rm -f $m
         git rm -f --cached $m
         rm -rf .git/modules/$m
+        rm -rf $m
     done
 }
 
