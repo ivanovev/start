@@ -7,15 +7,15 @@ set srctar=%name%.tar
 set s7z="C:\Program Files\7-Zip\7z.exe"
 set cxfreeze="C:\Python33\Scripts\cxfreeze.bat"
 
-rmdir /S /Q freeze
-del "%srcdir%\*.7z"
+rem rmdir /S /Q freeze
+rem del "%srcdir%\*.7z"
 
-%s7z% x "%srctgz%" -ofreeze
-cd freeze
-%s7z% x "%srctar%"
+rem %s7z% x "%srctgz%" -ofreeze
+rem cd freeze
+rem %s7z% x "%srctar%"
 
-set all=hm all
-set /p id="hm/all: " %=%
+set all=hm br fio all
+set /p id="%all%: " %=%
 if not "%id%" == "all" (
 	set all=%id%
 )

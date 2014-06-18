@@ -66,9 +66,9 @@ class MyServer(SimpleXMLRPCServer):
         for k,v in extras.items():
             self.register_function(v, k)
             for k1 in ['spi', 'gpio', 'mdio', 'uart']:
-                if k.find(k1) != -1:
-                    m = k.split('.')[0]
-                    self.backends.add(m)
+                kk = k.split('.')
+                if k1 in kk:
+                    self.backends.add(kk[0])
         self.backend1(dfltbe)
         self.register_introspection_functions()
         self.allow_none = True

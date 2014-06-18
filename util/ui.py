@@ -43,7 +43,7 @@ class UI:
             if type(v) in [dict, OD]:
                 p1 = tk.Menu(menubar, tearoff=0)
                 menubar.add_cascade(menu=p1, label=k)
-                self.add_menus(v, p1)
+                self.add_menus(v, p1, menu_cb)
                 v['m'] = p1
             elif v == None:
                 menubar.add_separator()
