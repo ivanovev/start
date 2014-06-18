@@ -21,7 +21,7 @@ def plotft_cb(mainwnd, *args):
 def plot_menus():
     menu_plot = OD()
     menu_plot['Plot'] = OD()
-    menu_plot['Plot']['F(x)'] = plotfx_cb
     menu_plot['Plot']['F(t)'] = plotft_cb
+    menu_plot['Plot']['F(x)'] = plotfx_cb
     return menu_plot
 
