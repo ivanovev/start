@@ -325,6 +325,12 @@ class Data(list):
         for k1,v1 in v.radio.items():
             v1.state(['!disabled' if (enable if k1 in labels else not enable) else 'disabled'])
 
+    def print_data(self):
+        for d in self:
+            print(d.name)
+            for k,v in d.items():
+                print(k, v)
+
     def print_hex(self):
         self.select('hex')
         for k,v in self.cmds.items():

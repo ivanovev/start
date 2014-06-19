@@ -4,6 +4,7 @@ import matplotlib.backends.backend_tkagg
 
 from collections import OrderedDict as OD
 from .plot import Plot
+from .plotdata import PlotData, get_cmdsx
 from .setup import Setup
 
 def plot_cb(mainwnd, *args):

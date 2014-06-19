@@ -22,15 +22,17 @@ from .setup import get_cmdsx
 import sys, pdb
 
 class Plot(Monitor):
-    def __init__(self, mode, apps, args):
-        data = PlotData()
-        data.from_args(mode, apps, args)
-        self.parse_savefig(args)
+    def __init__(self, mode, apps=None, args=None, data=None):
+        if not data:
+            data = PlotData()
+            data.from_args(mode, apps, args)
+            self.parse_savefig(args)
         self.mode = mode
         Monitor.__init__(self, data=data)
         self.root.title('Plot f(x)' if mode == 'fx' else 'Plot f(t)')
         self.fileext = 'csv'
         self.stop = False
+        self.data.print_data()
         #self.after_plot = self.root.after_idle(self.io.start)
 
     def add_menu_view(self):
@@ -105,7 +107,6 @@ class Plot(Monitor):
         cb = ttk.Checkbutton(fr, text='Pause', variable=self.pause, command=self.redraw_all)
         cb.pack(side=tk.RIGHT, expand=0)
 
-        self.silent = (self.mode == 'ft')
         self.xlim = self.get_xlim()
         cmds = self.data['y']
         self.update_formatter()
@@ -165,10 +166,11 @@ class Plot(Monitor):
             self.exit_cb()
             return
         elif self.mode == 'fx':
+            if not hasattr(self, 'step'):
+                self.step = float(self.data.get_value('step'))
             if not hasattr(self, 'x'):
                 self.data.select('fx')
                 self.x = float(self.data.get_value('min'))
-                self.step = float(self.data.get_value('step'))
             else:
                 self.x += self.step
             self.data.select('x')
@@ -186,7 +188,7 @@ class Plot(Monitor):
         self.data.do_cmds(self.qo, read=True)
         return True
 
-    def plot_cb3(self):
+    def plot_cb3(self, io_start_after_idle=True):
         x = self.x
         cmds = self.data['y']
         kk = list(cmds.keys())
@@ -194,9 +196,11 @@ class Plot(Monitor):
         xlim = self.xlim
         pause = int(self.pause.get())
         for k,v in cmds.items():
+            if not v.send:
+                continue
             val = v['t'].get()
             v['t'].set('')
-            if val == '' and not self.silent:
+            if not val and self.mode != 'ft':
                 #print('end_cb return')
                 return
             xx = v['xx'][-1]
@@ -223,11 +227,15 @@ class Plot(Monitor):
             self.plot_upd = self.root.after(dt, self.io.start)
         elif self.mode == 'fx':
             self.data.select('fx')
-            if float(self.data.get_value('max')) < self.x + self.step/2:
-                if self.savefig:
+            x1, x2 = self.get_xlim()
+            x = self.x + self.step/2
+            if x < x1 or x > x2:
+                if getattr(self, 'savefig', False):
                     self.savefig_and_exit()
-                return
-            self.root.after_idle(self.io.start)
+                return False
+            if io_start_after_idle:
+                self.root.after_idle(self.io.start)
+            return True
 
     def redraw_all(self):
         pause = int(self.pause.get())
@@ -257,6 +265,7 @@ class Plot(Monitor):
                 yi = v['yy'][i]
                 if self.mode == 'fx':
                     v.ax.plot(xi, yi, 'b')
+                    v.ax.plot(xi, yi, 'o')
                 else:
                     v.ax.plot_date(xi, yi, 'b')
             self.ax_init(v)
