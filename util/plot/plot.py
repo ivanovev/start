@@ -92,20 +92,24 @@ class Plot(Monitor):
         self.add_menu_view()
         self.root.protocol('WM_DELETE_WINDOW', self.exit_cb)
         self.fig = Figure(figsize=(5,4), dpi=100)
-        canvas = FigureCanvasTkAgg(self.fig, master=self.frame)
-        canvas.show()
-        canvas.get_tk_widget().pack(fill=tk.BOTH, expand=1)
+        self.canvas = FigureCanvasTkAgg(self.fig, master=self.frame)
+        self.canvas.show()
+        self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=1)
         self.add_fb()
         fl = tk.Frame(self.fb)
-        fl.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
-        toolbar = NavigationToolbar2TkAgg(canvas, fl)
+        #fl.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
+        fl.grid(column=0, row=0, sticky=tk.NSEW)
+        toolbar = NavigationToolbar2TkAgg(self.canvas, fl)
         toolbar.update()
-        canvas._tkcanvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
+        self.canvas._tkcanvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
         fr = tk.Frame(self.fb)
-        fr.pack(side=tk.RIGHT, fill=tk.Y, expand=0)
+        #self.fbfr.pack(side=tk.RIGHT, fill=tk.Y, expand=0)
+        fr.grid(column=1, row=0, sticky=tk.E)
         self.pause = tk.StringVar(value=0)
         cb = ttk.Checkbutton(fr, text='Pause', variable=self.pause, command=self.redraw_all)
         cb.pack(side=tk.RIGHT, expand=0)
+        self.fb.columnconfigure(0, weight=1)
+        self.fb.columnconfigure(1, weight=1)
 
         self.xlim = self.get_xlim()
         cmds = self.data['y']
@@ -127,19 +131,23 @@ class Plot(Monitor):
 
     def ax_init(self, v):
         v.ax.set_title(v.label)
-        v.ax.set_xlim(self.xlim)
+        x1, x2 = self.get_xlim()
+        v.ax.set_xlim((min(x1, x2), max(x1, x2)))
         if self.mode == 'ft':
             v.ax.xaxis.set_major_locator(self.locator)
         v.ax.xaxis.set_major_formatter(self.formatter)
+        v.ax.yaxis.set_major_formatter(self.formatter)
         if int(self.grid.get()):
             v.ax.grid()
 
     def get_xlim(self):
         self.data.select(self.mode)
         if self.mode == 'fx':
-            x1 = self.data.get_value('min')
-            x2 = self.data.get_value('max')
-            return [float(x1), float(x2)]
+            x1 = float(self.data.get_value('min'))
+            x2 = float(self.data.get_value('max'))
+            x11 = min(x1, x2)
+            x22 = max(x1, x2)
+            return [x1, x2] if getattr(self, 'sign', True) else [x2, x1]
         elif self.mode == 'ft':
             span = self.data.get_seconds('span')
             t2 = datetime.now()
@@ -166,13 +174,11 @@ class Plot(Monitor):
             self.exit_cb()
             return
         elif self.mode == 'fx':
-            if not hasattr(self, 'step'):
-                self.step = float(self.data.get_value('step'))
-            if not hasattr(self, 'x'):
-                self.data.select('fx')
-                self.x = float(self.data.get_value('min'))
-            else:
-                self.x += self.step
+            self.data.select('fx')
+            x = self.next_prev_x()
+            if x == None:
+                return
+            self.x = x
             self.data.select('x')
             k,v = list(self.data.cmds.items())[0]
             #print(k, self.x, v.dev)
@@ -187,6 +193,40 @@ class Plot(Monitor):
         self.data.select('y')
         self.data.do_cmds(self.qo, read=True)
         return True
+
+    def next_prev_x(self, nextx=True):
+        step = float(self.data.get_value('step'))
+        if getattr(self, 'sign', True):
+            self.step = step
+        else:
+            self.step = -step
+        x1, x2 = self.get_xlim()
+        if not hasattr(self, 'x'):
+            return min(x1, x2) if getattr(self, 'sign', True) else max(x1, x2)
+        if nextx:
+            if self.x == x2:
+                return
+        else:
+            if self.x == x1:
+                return
+        x = self.x
+        if nextx:
+            x += self.step
+            if self.step > 0:
+                if x > x2:
+                    x = x2
+            else:
+                if x < x2:
+                    x = x2
+        else:
+            x -= self.step
+            if self.step > 0:
+                if x < x1:
+                    x = x1
+            else:
+                if x > x1:
+                    x = x1
+        return x
 
     def plot_cb3(self, io_start_after_idle=True):
         x = self.x
@@ -241,7 +281,7 @@ class Plot(Monitor):
         pause = int(self.pause.get())
         if pause:
             return
-        xlim = self.xlim
+        xlim = self.get_xlim()
         cmds = self.data['y']
         num = 0
         for k,v in cmds.items():
@@ -281,7 +321,7 @@ class Plot(Monitor):
             yy = [list(chain(*v['yy'])) for v in vv]
             for i in range(0, len(xx)):
                 yyi = [k[i] for k in yy]
-                f.write(','.join(['%g' % j for j in [xx[i]] + yyi]) + '\n')
+                f.write(','.join(['%.5f' % j for j in [xx[i]] + yyi]) + '\n')
             f.close()
 
     def parse_savefig(self, args):

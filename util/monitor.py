@@ -12,14 +12,15 @@ from .tooltip import ToolTip
 import sys, pdb
 
 class Monitor(Control):
-    def __init__(self, data, dev=None, dt=15):
+    def __init__(self, data, dev=None):
         Control.__init__(self, data=data, dev=dev)
-        self.dt = tk.StringVar(value=dt)
+
+    def add_menu_dt(self):
+        self.dt = tk.StringVar(value=15)
         self.menu = tk.Menu(self.root, tearoff=0)
         for i in [1, 2, 3, 5, 10, 15, 30, 60, 120]:
             self.menu.add_radiobutton(label='%ds'%i, variable=self.dt, value='%d'%i, command=lambda: self.mntr_io_start(self.io.start))
         self.root.bind("<ButtonRelease-3>", self.menu_cb)
-        self.after_mntr = self.root.after_idle(self.io.start)
 
     def init_layout(self):
         self.mode = 0
@@ -64,6 +65,8 @@ class Monitor(Control):
         self.root.bind("<ButtonPress-1>", self.start_move_cb)
         self.root.bind("<ButtonRelease-1>", self.stop_move_cb)
         self.root.bind("<B1-Motion>", self.motion_cb)
+        self.add_menu_dt()
+        self.after_mntr = self.root.after_idle(self.io.start)
 
     def draw_pb(self, drawpb):
         if drawpb:
@@ -133,11 +136,13 @@ class Monitor(Control):
                 r = int(j / cn)
                 if c == 0:
                     f1.rowconfigure(r, weight=1, pad=2)
-                l.configure(anchor=tk.CENTER)
-                if not v.width:
-                    w.configure(width=5)
-                l.grid(column=c, row=r, sticky=tk.NSEW)
-                w.grid(column=c+1, row=r, pady=2, sticky=tk.NSEW)
+                if l:
+                    l.configure(anchor=tk.CENTER)
+                    l.grid(column=c, row=r, sticky=tk.NSEW)
+                if w:
+                    if not v.width:
+                        w.configure(width=5)
+                    w.grid(column=c+1, row=r, pady=2, sticky=tk.NSEW)
                 j = j + 1
 
         if n == 0:
