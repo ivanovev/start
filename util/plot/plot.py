@@ -32,8 +32,8 @@ class Plot(Monitor):
         self.root.title('Plot f(x)' if mode == 'fx' else 'Plot f(t)')
         self.fileext = 'csv'
         self.stop = False
-        self.data.print_data()
-        #self.after_plot = self.root.after_idle(self.io.start)
+        #self.data.print_data()
+        self.after_plot = self.root.after_idle(self.io.start)
 
     def add_menu_view(self):
         menu_view = tk.Menu(self.menubar, tearoff=0)
@@ -78,13 +78,14 @@ class Plot(Monitor):
                 interval = 1
                 if mm > 20:
                     interval = int(mm/10)
-                self.formatter = DateFormatter('%H:%M')
-                self.locator = MinuteLocator(interval=interval)
+                self.xformatter = DateFormatter('%H:%M')
+                self.xlocator = MinuteLocator(interval=interval)
             else:
-                self.formatter = DateFormatter('%H')
-                self.locator = HourLocator()
+                self.xformatter = DateFormatter('%H')
+                self.xlocator = HourLocator()
         else:
-            self.formatter = ScalarFormatter(useOffset=False)
+            self.xformatter = ScalarFormatter(useOffset=False)
+        self.yformatter = ScalarFormatter(useOffset=False)
 
     def init_layout(self):
         self.add_menu_file(file_open=False, file_save=False, file_saveas=False, file_export=True)
@@ -132,11 +133,15 @@ class Plot(Monitor):
     def ax_init(self, v):
         v.ax.set_title(v.label)
         x1, x2 = self.get_xlim()
-        v.ax.set_xlim((min(x1, x2), max(x1, x2)))
         if self.mode == 'ft':
-            v.ax.xaxis.set_major_locator(self.locator)
-        v.ax.xaxis.set_major_formatter(self.formatter)
-        v.ax.yaxis.set_major_formatter(self.formatter)
+            v.ax.set_xlim(x1, x2)
+            v.ax.xaxis.set_major_locator(self.xlocator)
+            v.ax.xaxis.set_major_formatter(self.xformatter)
+            v.ax.yaxis.set_major_formatter(self.yformatter)
+        if self.mode == 'fx':
+            v.ax.set_xlim((min(x1, x2), max(x1, x2)))
+            v.ax.xaxis.set_major_formatter(self.xformatter)
+            v.ax.yaxis.set_major_formatter(self.yformatter)
         if int(self.grid.get()):
             v.ax.grid()
 

@@ -317,7 +317,7 @@ class MyProxy:
         if not self.ping_srv(srv):
             print('Failed to ping srv', srv)
             return
-        ms = self.find_methods(srv)
+        ms = self.get_methods(srv)
         method = args[0]
         args = args[1:]
         if ms:
@@ -401,10 +401,12 @@ class MyProxy:
         pxy = self.cd.get(lambda: ServerProxy('http://%s' % srv, allow_none=True), srv, 'proxy')
         return pxy
 
+    '''
     def find_methods(self, srv=None):
         if srv == None:
             srv = self.get_local_srv()
         return self.cd.find(srv, 'methods')
+    '''
 
     def get_methods(self, srv=None):
         if srv == None:

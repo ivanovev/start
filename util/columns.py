@@ -4,6 +4,7 @@ from .server import proxy
 from .misc import app_gui
 from .tooltip import ToolTip
 import tkinter as tk
+import pdb
 
 c_name = 'name'
 c_type = 'type'
@@ -23,8 +24,10 @@ def get_columns(add=[]):
 
 def serial_click_cb(k, data):
     srv = data.get_value(c_server)
+    #pdb.set_trace()
     try:
         res = proxy.call_method(srv, 'srv.get_serials')
+        #print(srv, res)
         s = res.split()
         v = data.find_v('serial')
         v.w.configure(values=s)
