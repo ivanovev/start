@@ -53,9 +53,10 @@ class MyServer(SimpleXMLRPCServer):
         self.register_function(self.alive, 'srv.alive')
         self.register_function(self.echo1, 'srv.echo')
         self.register_function(self.idle1, 'srv.idle')
-        self.register_function(self.backend1, 'srv.backend')
         self.register_function(self.verbose1, 'srv.verbose')
         self.register_function(self.stop_server, 'srv.stop')
+        self.register_function(self.backend1, 'srv.backend')
+        self.register_function(self.backends1, 'srv.backends')
         self.register_function(self.reload_acl, 'srv.reload_acl')
         self.register_function(self.start_process1, 'srv.start_process')
         self.register_function(get_version, 'srv.version')
@@ -195,15 +196,19 @@ class MyServer(SimpleXMLRPCServer):
         """
         return self.lfunc('verbose', v)
 
+    def backends1(self):
+        """
+        Вернуть список устройств, которые обеспечивают доступ к spi, gpio, uart...
+        """
+        ret = list(self.backends)
+        ret.sort()
+        return ' '.join(ret)
+
     def backend1(self, v=''):
         """
         Выбрать текущий набор функций для доступа к spi, gpio, uart...
         """
-        if v == 'list':
-            ret = list(self.backends)
-            ret.sort()
-            return ' '.join(ret)
-        elif v in self.backends:
+        if v in self.backends:
             kk = list(self.funcs.keys())
             for k in kk:
                 if k.find('util') == 0:
@@ -217,7 +222,7 @@ class MyServer(SimpleXMLRPCServer):
         elif not v:
             if hasattr(self, 'backend'):
                 return self.backend
-            return ''
+        return ''
 
     def stop_server(self):
         """
@@ -362,11 +367,6 @@ class MyProxy:
             srv = self.get_local_srv()
         return self.cd.get(lambda: self.get_argspec_raw(srv, m), srv, m, 'argspec')
 
-    def insert_ip_addr(self, srv, m):
-        return False
-        #argspec = self.get_argspec(srv, m)
-        #return argspec.args[0] == 'ip_addr'
-
     def call(self, dev, *args, rec=1):
         cmd = ' '.join(list(args))
         srv = dev['server'] if dev else self.get_local_srv()
@@ -387,10 +387,7 @@ class MyProxy:
             if args[0] == args[1]:
                 args.pop(0)
         args.pop(0)
-        if self.insert_ip_addr(srv, m):
-            return self.call_method(srv, m, dev['ip_addr'], *args, dev=dev)
-        else:
-            return self.call_method(srv, m, *args, dev=dev)
+        return self.call_method(srv, m, *args, dev=dev)
 
     def get_local_srv(self):
         return '127.0.0.1:%d' % self.port
@@ -400,13 +397,6 @@ class MyProxy:
             srv = self.get_local_srv()
         pxy = self.cd.get(lambda: ServerProxy('http://%s' % srv, allow_none=True), srv, 'proxy')
         return pxy
-
-    '''
-    def find_methods(self, srv=None):
-        if srv == None:
-            srv = self.get_local_srv()
-        return self.cd.find(srv, 'methods')
-    '''
 
     def get_methods(self, srv=None):
         if srv == None:
@@ -445,6 +435,9 @@ class MyProxy:
 
     def backend(self, *args):
         return self.call(None, 'srv.backend', *args)
+
+    def backends(self, *args):
+        return self.call(None, 'srv.backends', *args)
 
     def start_process(self, *args, srvalive=None):
         if self.alive() if srvalive == None else False:

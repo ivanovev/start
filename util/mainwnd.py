@@ -150,7 +150,7 @@ class Mainwnd(tk.Tk, UI):
                 self.idle.set(proxy.idle())
                 self.verbose.set(proxy.verbose())
             if not hasattr(self, 'backends'):
-                self.backends = proxy.backend('list').split()
+                self.backends = proxy.backends().split()
                 if len(self.backends):
                     b1 = proxy.backend()
                     mb = tk.Menu(self.menu_srv, tearoff=0)
