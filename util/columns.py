@@ -73,7 +73,7 @@ def dev_trace_cb(k, data):
 def get_devdata(name, columns, devtypes):
     data = Data(name)
     data.add(c_name, label=c_name, wdgt='entry', text='new')
-    data.add(c_type, label=c_type, wdgt='combo', state='readonly', value=devtypes, trace_cb=dev_trace_cb)
+    data.add(c_type, label=c_type, wdgt='combo', state='readonly', text='', value=devtypes, trace_cb=dev_trace_cb)
     data.add(c_server, label=c_server, wdgt='entry', text=proxy.get_local_srv())
     if c_ip_addr in columns:
         data.add(c_ip_addr, label=c_ip_addr, wdgt='entry', text='192.168.0.1')
@@ -82,7 +82,7 @@ def get_devdata(name, columns, devtypes):
     if c_serial in columns:
         data.add('serial', label='serial', wdgt='combo', value=['ttyUSB0', 'ttyS0'], click_cb=lambda k: serial_click_cb(k, data))
     if c_addr in columns:
-        data.add('addr', label='addr', wdgt='entry')
+        data.add('addr', label='addr', wdgt='entry', text='0')
     if c_spi in columns:
         data.add(c_spi, label='spi', wdgt='entry', text='0')
     if c_gpio in columns:

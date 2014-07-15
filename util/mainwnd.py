@@ -208,19 +208,15 @@ class Mainwnd(tk.Tk, UI):
         self.tree_update_item(self.tree, itemid, dev)
 
     def dev_dlg(self, cat, dev=None):
-        self.devdata.select(cat)
-        data = Data(name=cat, cmds=self.devdata.cmds)
+        devdata = app_devdata(self.apps, cat)
+        data = Data(name=cat, cmds=devdata.cmds)
         dlg = Control(data=data, parent=self, title='Edit '+cat if dev else 'Add '+cat, pady=5)
-        dlg.add_buttons_ok_cancel()
         if dev:
             cmds = data.cmds
             for k,v in dev.items():
                 if k in cmds:
                     cmds[k]['t'].set(v)
-        else:
-            data.cmds['name'].t.set('new')
-            data.cmds['type'].t.set('')
-            data.cmds['server'].t.set(proxy.get_local_srv())
+        dlg.add_buttons_ok_cancel()
         dlg.do_modal()
         if not hasattr(dlg, 'kw'):
             return

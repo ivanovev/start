@@ -122,9 +122,9 @@ def app_srv(apps):
         extras[k] = f
     return extras
 
-def app_devdata(apps):
+def app_devdata(apps, mname=''):
     devdata = Data()
-    for m,f in app_iter(apps, '', 'devdata', maxdepth=0):
+    for m,f in app_iter(apps, mname.lower(), 'devdata', maxdepth=0):
         d = f()
         devdata.update(d)
     devdata.select(0)
