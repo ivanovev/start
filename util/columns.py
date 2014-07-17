@@ -76,7 +76,7 @@ def get_devdata(name, columns, devtypes):
     data.add(c_type, label=c_type, wdgt='combo', state='readonly', text='', value=devtypes, trace_cb=dev_trace_cb)
     data.add(c_server, label=c_server, wdgt='entry', text=proxy.get_local_srv())
     if c_ip_addr in columns:
-        data.add(c_ip_addr, label=c_ip_addr, wdgt='entry', text='192.168.0.1')
+        data.add(c_ip_addr, label=c_ip_addr, wdgt='combo', value=['192.168.0.1', '127.0.0.1'], text='192.168.0.1')
     if c_altname in columns:
         data.add(c_altname, label=c_altname, wdgt='entry', text='fir0')
     if c_serial in columns:
