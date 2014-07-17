@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 
 from telnetlib import Telnet
+from util import ping
 
-import os, re, sys, subprocess
-import pdb
+import re
+import sys
 
 '''
 import socket
@@ -16,21 +17,6 @@ def socketwrap(family=socket.AF_INET, type=socket.SOCK_STREAM, proto=0):
    return sockobj 
 socket.socket=socketwrap 
 '''
-
-def ping(ip, retries = -1):
-    ret = 0
-    if os.name == 'posix':
-        if retries == -1: retries = 1
-        ret = subprocess.call("fping -c1 -t200 %s" % ip, shell=True, stdout=open('/dev/null', 'w'), stderr=subprocess.STDOUT)
-    if os.name == 'nt':
-        if retries == -1: retries = 0
-        ret = subprocess.call("ping -n 1 -w 200 %s" % ip, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    ret = True if ret == 0 else False
-    if ret:
-        return ret
-    if retries > 0:
-        return ping(ip, retries - 1)
-    return ret
 
 # Обратиться по протоколу telnet к устройству %ip_addr% и выполнить команду %cmd%
 # @param ip_addr - ip-адрес устройства
