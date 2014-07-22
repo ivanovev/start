@@ -1,6 +1,7 @@
 
 import os, types
 import tkinter as tk
+import tkinter.ttk as ttk
 from tkinter import filedialog
 from collections import OrderedDict as OD
 import pdb
@@ -216,6 +217,15 @@ class UI:
         w.config(state=tk.NORMAL)
         w.delete(1.0, tk.END)
         w.config(state=state)
+
+    def tree_add(self, f, width1=300):
+        self.columns = ['name', 'value']
+        self.tree = ttk.Treeview(f, columns=self.columns)
+        self.tree_init(self.tree)
+        self.tree.column(self.columns[0], stretch=0)
+        if width1:
+            self.tree.column(self.columns[1], width=width1)
+        return self.tree
 
     def tree_init(self, w, anchorcenter=None):
         w.column('#0', stretch=0, width=24, minwidth=0)
