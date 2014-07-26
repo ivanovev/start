@@ -12,7 +12,7 @@ from .tooltip import ToolTip
 import sys, pdb
 
 class Monitor(Control):
-    def __init__(self, data, dev=None):
+    def __init__(self, data=None, dev=None):
         Control.__init__(self, data=data, dev=dev)
 
     def add_menu_dt(self):

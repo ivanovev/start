@@ -210,7 +210,7 @@ class Mainwnd(tk.Tk, UI):
     def dev_dlg(self, cat, dev=None):
         devdata = app_devdata(self.apps, cat)
         data = Data(name=cat, cmds=devdata.cmds)
-        dlg = Control(data=data, parent=self, title='Edit '+cat if dev else 'Add '+cat, pady=5)
+        dlg = Control(data=data, parent=self, title=('Edit' if dev else 'Add') + ' ' + cat, pady=5)
         if dev:
             cmds = data.cmds
             for k,v in dev.items():
@@ -252,8 +252,7 @@ class Mainwnd(tk.Tk, UI):
             f = open(fname, 'r')
         except:
             return False
-        for i in self.tree.get_children():
-            self.tree.delete(i)
+        self.tree_clear(self.tree)
         cat = None
         all_cats = [i.name for i in self.devdata]
         for i in f.readlines():
@@ -284,15 +283,6 @@ class Mainwnd(tk.Tk, UI):
 
     def itemdata(self, id1=None):
         return self.tree_data(self.tree, id1)
-
-    def iteritems(self, item_cb, itemid=None):
-        if itemid == None:
-            items = self.tree.get_children()
-        elif itemid != None:
-            item_cb(itemid)
-            items = self.tree.get_children(itemid)
-        for i in items:
-            self.iteritems(item_cb, i)
 
     def filesave(self, fname):
         f = open(fname, 'w')

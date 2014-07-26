@@ -50,8 +50,12 @@ class UI:
                 menubar.add_separator()
             elif type(k) in [tuple]:
                 sv = tk.StringVar(value=k[0])
-                for i in k:
-                    menubar.add_radiobutton(label=i, variable=sv, value=i, command=lambda v=v,i=i: v(self,i))
+                if len(k) > 1:
+                    for i in k:
+                        menubar.add_radiobutton(label=i, variable=sv, value=i, command=lambda v=v,i=i: v(self,i))
+                else:
+                    sv.set(0)
+                    menubar.add_checkbutton(label=k[0], variable=sv, command=lambda v=v,i=sv: v(self,i))
             elif type(v) in [types.FunctionType, types.MethodType]:
                 if menu_cb == None:
                     f = lambda v=v: v(self)
@@ -218,55 +222,57 @@ class UI:
         w.delete(1.0, tk.END)
         w.config(state=state)
 
-    def tree_add(self, f, width1=300):
-        self.columns = ['name', 'value']
-        self.tree = ttk.Treeview(f, columns=self.columns)
+    def tree_add(self, f, width1=300, columns=['name', 'value']):
+        self.columns = columns
+        self.tree = ttk.Treeview(f, columns=columns)
         self.tree_init(self.tree)
-        self.tree.column(self.columns[0], stretch=0)
+        self.tree.column(columns[0], stretch=0)
         if width1:
-            self.tree.column(self.columns[1], width=width1)
+            self.tree.column(columns[1], width=width1)
         return self.tree
 
     def tree_init(self, w, anchorcenter=None):
+        columns = self.tree_columns(w)
         w.column('#0', stretch=0, width=24, minwidth=0)
-        for i in self.columns:
+        for i in columns:
             w.heading(i, text=i)
             w.column(i, width=100)
-            if self.columns.index(i) == 0 and not anchorcenter:
+            if columns.index(i) == 0 and not anchorcenter:
                 w.column(i, stretch=0)
-            if self.columns.index(i) > 0 and anchorcenter:
+            if columns.index(i) > 0 and anchorcenter:
                 w.column(i, anchor='center')
 
     def tree_add_lvl0(self, w, od, tags=(), expand=False):
-        c0 = None
-        if type(od) == OD:
-            c0 = list(od.values())[0]
-        elif type(od) in [list, tuple]:
-            c0 = od[0]
+        columns = self.tree_columns(w)
+        c0 = columns[0]
         if c0:
-            id1 = w.insert('', 'end', tags=tags)
-            self.tree_update_item(w, id1, od)
+            id0 = w.insert('', 'end', tags=tags)
+            self.tree_update_item(w, id0, od)
             if expand:
-                w.item(id1, open=tk.TRUE)
+                w.item(id0, open=tk.TRUE)
+            return id0
 
     def tree_add_lvl1(self, w, lvl0, item, expand=True):
-        lvl0id = self.tree_find_lvl0id(w, lvl0)
-        lvl1id = w.insert(lvl0id, 'end', tags=('evt'))
+        id0= self.tree_find_id0(w, lvl0)
+        id1 = w.insert(id0, 'end', tags=('evt'))
         if expand:
-            w.see(lvl1id)
-            w.selection_set(lvl1id)
-        self.tree_update_item(w, lvl1id, item)
+            w.see(id1)
+            w.selection_set(id1)
+        self.tree_update_item(w, id1, item)
+        return id1
 
     def tree_update_item(self, w, itemid, item):
+        columns = self.tree_columns(w)
         if type(item) in [dict, OD]:
-            for i in self.columns:
+            for i in columns:
                 w.set(itemid, i, item[i] if i in item else '')
         elif type(item) in [list, tuple]:
             for i in range(0, len(item)):
-                w.set(itemid, self.columns[i], item[i])
+                w.set(itemid, columns[i], item[i])
 
-    def tree_find_lvl0id(self, w, name):
-        c0 = self.columns[0]
+    def tree_find_id0(self, w, name):
+        columns = self.tree_columns(w)
+        c0 = columns[0]
         ids = w.get_children()
         for i in ids:
             if w.set(i, c0) == name:
@@ -274,14 +280,15 @@ class UI:
 
     @sel_dec
     def tree_data(self, w, id1=None):
+        columns = self.tree_columns(w)
         lvl = self.tree_item_lvl(w, id1)
-        c0 = self.columns[0]
+        c0 = columns[0]
         l = w.item(id1)
-        for i in self.columns:
+        for i in columns:
             s = w.set(id1, i)
             if len(s) > 0:
                 l[i] = s
-        keys = set.intersection(set(self.columns), set(l.keys()))
+        keys = set.intersection(set(columns), set(l.keys()))
         if lvl == 0:
             keys.add('open')
         data = {i:l[i] for i in keys}
@@ -298,4 +305,21 @@ class UI:
         ids0 = w.get_children()
         ret = 0 if id1 in ids0 else 1
         return ret
+
+    def tree_clear(self, w):
+        for i in w.get_children():
+            w.delete(i)
+
+    def tree_columns(self, tree):
+        cc = tree['columns']
+        return cc
+
+    def iteritems(self, item_cb, itemid=None):
+        if itemid == None:
+            items = self.tree.get_children()
+        elif itemid != None:
+            item_cb(itemid)
+            items = self.tree.get_children(itemid)
+        for i in items:
+            self.iteritems(item_cb, i)
 
