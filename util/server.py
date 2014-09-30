@@ -66,7 +66,7 @@ class MyServer(SimpleXMLRPCServer):
         self.extras = extras
         for k,v in extras.items():
             self.register_function(v, k)
-            for k1 in ['spi', 'gpio', 'mdio', 'uart']:
+            for k1 in ['spi', 'gpio', 'mdio', 'uart', 'telnet']:
                 kk = k.split('.')
                 if k1 in kk:
                     self.backends.add(kk[0])
@@ -93,13 +93,14 @@ class MyServer(SimpleXMLRPCServer):
         func = self.funcs[method]
         outdev = OutDevice()
         if not hasattr(func, 'stdout'):
-            sys.stdout = outdev
+            #sys.stdout = outdev
+            pass
         try:
             result = func(*params)
         except:
             print('Failed to call %s' % method, sys.exc_info())
             result = None
-        sys.stdout = sys.__stdout__
+        #sys.stdout = sys.__stdout__
         if self.verbose:
             self.verbose_msg(method, params, result)
         if outdev.output != '':
@@ -107,8 +108,23 @@ class MyServer(SimpleXMLRPCServer):
         return result
 
     def verbose_msg(self, method, params, result):
+        max_msg_len = 79
         if self.verbose or (method == 'verbose' and len(params) == 1):
-            print(self.src_ip, method, params, result)
+            m = ' '.join([str(self.src_ip), str(method), str(params)])
+            if type(result) == str:
+                rr = result.split()
+                m = ' '.join([m, rr[0]])
+                if len(m) > max_msg_len:
+                    m = m[0:max_msg_len-3] + '...'
+                else:
+                    for i in range(1, len(rr)):
+                        if len(m) + len(rr[i]) + 1 > max_msg_len:
+                            m += '...'
+                            break
+                        m += ' ' + rr[i]
+                print(m)
+            else:
+                print(m, result)
 
     def serve_forever(self):
         self.quit = 0

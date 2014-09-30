@@ -5,19 +5,19 @@ from queue import Queue
 from .server import proxy
 
 class SocketIO:
-    def __init__(self, host, fname, fsz=0, send=True):
-        self.DEV_TX_PORT = 8888
-        self.DEV_RX_PORT = 8889
+    def __init__(self, ip_addr, port, fname, fsz=0, send=True):
+        #self.DEV_TX_PORT = 8888
+        #self.DEV_RX_PORT = 8889
         self.fsz = fsz
-        self.host = host
+        self.ip_addr = ip_addr
+        self.port = port
         self.send = send
-        self.port = self.DEV_RX_PORT if send else self.DEV_TX_PORT
         self.fname = fname
 
     def create_socket(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
-            s.connect((self.host, self.port))
+            s.connect((self.ip_addr, self.port))
         except socket.error:
             s.close()
             print('could not connect')
@@ -123,7 +123,7 @@ def chunks(l, n):
     for i in range(0, len(l), n):
         yield '0x' + str(l[i:i+n], 'ascii')
 
-def send_data(ip_addr, fname, fsz=''):
+def send_data(ip_addr, port, fname, fsz=''):
     '''
     Отправить данные из файла в устройство
     @param ip_addr - ip-адрес устройства
@@ -132,10 +132,10 @@ def send_data(ip_addr, fname, fsz=''):
     '''
     fsz = get_fsz(fname, fsz)
     if fsz:
-        sktio = SocketIO(ip_addr, fname, fsz=fsz, send=True)
+        sktio = SocketIO(ip_addr, port, fname, fsz=fsz, send=True)
         return sktio.data_io(caller_func=send_data)
 
-def recv_data(ip_addr, fname, fsz):
+def recv_data(ip_addr, port, fname, fsz):
     '''
     Получить данные из устройства и записать в файл
     @param ip_addr - ip-адрес устройства
@@ -145,6 +145,6 @@ def recv_data(ip_addr, fname, fsz):
     '''
     fsz = get_fsz(fname, fsz)
     if fsz:
-        myio = SocketIO(ip_addr, fname, fsz=fsz, send=False)
+        myio = SocketIO(ip_addr, port, fname, fsz=fsz, send=False)
         return myio.data_io(caller_func=recv_data)
 
