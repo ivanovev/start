@@ -115,7 +115,10 @@ class DataIO(Control):
         dev = self.data.dev
         dev['ip_addr'] = self.data.get_value('ip_addr')
         if self.read:
-            return self.tmp_cb1(telnet_io_cb(dev, 'efc tx'), key='fsz')
+            if dev['type'] == 'SAM7X':
+                return self.tmp_cb1(telnet_io_cb(dev, 'efc tx'), key='fsz')
+            elif dev['type'].find('STM32') == 0:
+                return self.tmp_cb1(telnet_io_cb(dev, 'flash tx2'), key='fsz')
         else:
             if self.data.find_v('fname'):
                 fname = self.data.get_value('fname')
@@ -124,7 +127,10 @@ class DataIO(Control):
                     return False
             fsz = self.data.get_value('fsz')
             md5 = self.data.get_value('md5')
-            return self.tmp_cb1(telnet_io_cb(dev, 'efc rx %s %s %s' % (fsz, evt, md5)), key='fsz')
+            if dev['type'] == 'SAM7X':
+                return self.tmp_cb1(telnet_io_cb(dev, 'efc rx %s %s %s' % (fsz, evt, md5)), key='fsz')
+            elif dev['type'].find('STM32') == 0:
+                return self.tmp_cb1(telnet_io_cb(dev, 'flash rx %s' % (fsz)), key='fsz')
 
     def data_cb1(self, read=True):
         self.filemode = 'rb' if read else 'wb'
