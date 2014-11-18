@@ -150,15 +150,17 @@ class Mainwnd(tk.Tk, UI):
                 self.idle.set(proxy.idle())
                 self.verbose.set(proxy.verbose())
             if not hasattr(self, 'backends'):
-                self.backends = proxy.backends().split()
-                if len(self.backends):
-                    b1 = proxy.backend()
-                    mb = tk.Menu(self.menu_srv, tearoff=0)
-                    self.menu_srv.add_separator()
-                    self.menu_srv.add_cascade(menu=mb, label='Backend')
-                    self.be = tk.StringVar(value=b1)
-                    for b in self.backends:
-                        mb.add_radiobutton(label=b, variable=self.be, value=b, command=lambda b=b: proxy.backend(b))
+                backends = proxy.backends()
+                if backends:
+                    self.backends = backends.split()
+                    if len(self.backends):
+                        b1 = proxy.backend()
+                        mb = tk.Menu(self.menu_srv, tearoff=0)
+                        self.menu_srv.add_separator()
+                        self.menu_srv.add_cascade(menu=mb, label='Backend')
+                        self.be = tk.StringVar(value=b1)
+                        for b in self.backends:
+                            mb.add_radiobutton(label=b, variable=self.be, value=b, command=lambda b=b: proxy.backend(b))
         else:
             self.startsrv.set('0')
 

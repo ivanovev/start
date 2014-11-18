@@ -13,7 +13,7 @@ def ping(ip, retries = -1):
     ret = 0
     if os.name == 'posix':
         if retries == -1: retries = 1
-        ret = subprocess.call("fping -c1 -t200 %s" % ip, shell=True, stdout=open('/dev/null', 'w'), stderr=subprocess.STDOUT)
+        ret = subprocess.call("fping -c1 -t500 %s" % ip, shell=True, stdout=open('/dev/null', 'w'), stderr=subprocess.STDOUT)
     if os.name == 'nt':
         if retries == -1: retries = 0
         ret = subprocess.call("ping -n 1 -w 200 %s" % ip, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -116,7 +116,7 @@ def app_srv(apps):
         if nm.find('srv') == -1:
             continue
         nm = nm.split('.')[-1]
-        if f.__name__.find(nm) == -1:
+        if f.__name__.find(nm) != 0:
             continue
         k = f.__name__.replace('_', '.', 1)
         extras[k] = f

@@ -130,7 +130,8 @@ def send_data(ip_addr, port, fname, fsz=''):
     @param fname - имя файла
     @return fsz - хорошо, None - ошибка
     '''
-    fsz = get_fsz(fname, fsz)
+    if not fsz:
+        fsz = get_fsz(fname, fsz)
     if fsz:
         sktio = SocketIO(ip_addr, port, fname, fsz=fsz, send=True)
         return sktio.data_io(caller_func=send_data)
@@ -143,7 +144,8 @@ def recv_data(ip_addr, port, fname, fsz):
     @param fsz - размер файла
     @return fsz - хорошо, None - ошибка
     '''
-    fsz = get_fsz(fname, fsz)
+    if not fsz:
+        fsz = get_fsz(fname, fsz)
     if fsz:
         myio = SocketIO(ip_addr, port, fname, fsz=fsz, send=False)
         return myio.data_io(caller_func=recv_data)

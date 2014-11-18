@@ -100,7 +100,7 @@ class MyServer(SimpleXMLRPCServer):
         except:
             print('Failed to call %s' % method, sys.exc_info())
             result = None
-        #sys.stdout = sys.__stdout__
+        sys.stdout = sys.__stdout__
         if self.verbose:
             self.verbose_msg(method, params, result)
         if outdev.output != '':
@@ -114,14 +114,11 @@ class MyServer(SimpleXMLRPCServer):
             if type(result) == str:
                 rr = result.split()
                 m = ' '.join([m, rr[0]])
-                if len(m) > max_msg_len:
-                    m = m[0:max_msg_len-3] + '...'
-                else:
-                    for i in range(1, len(rr)):
-                        if len(m) + len(rr[i]) + 1 > max_msg_len:
-                            m += '...'
-                            break
-                        m += ' ' + rr[i]
+                for i in range(1, len(rr)):
+                    if len(m) + len(rr[i]) + 1 > max_msg_len:
+                        m += '...'
+                        break
+                    m += ' ' + rr[i]
                 print(m)
             else:
                 print(m, result)

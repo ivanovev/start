@@ -112,7 +112,12 @@ class Data(list):
         self.select(i)
 
     def __contains__(self, k):
-        return self[k] != None
+        if self[k] != None:
+            return True
+        for j in self:
+            if k in j:
+                return True
+        return False
 
     def __getitem__(self, i):
         if type(i) == int:

@@ -1,9 +1,31 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import os, serial, pdb
+import os, serial, sys, pdb
 
-def query_serial(port, bps, nbits, parity, stopb, s, endstr='', read=True, dtr=None, rts=None, readlen=None, flushInput=True):
+def to_bytes(s):
+    if s and type(s) == str:
+        if s.find('0x') == 0:
+            ss = s.split('_')
+            s = bytes()
+            for i in ss:
+                i = i.replace('0x', '')
+                s += bytes([int(i, 16)])
+    if s and type(s) == str:
+        s = s.encode('ascii')
+    return s
+
+def print_dbg(s):
+    if not query_serial.verbose:
+        return
+    if s:
+        s = to_bytes(s)
+        print(s)
+        print('_'.join(['0x%02X' % i for i in s]))
+    else:
+        print('empty_str')
+
+def query_serial(port='COM1', bps='9600', nbits='8', parity='N', stopb='1', s='', endstr='', read=True, dtr=None, rts=None, readlen=None):
     """
     Функция посылает в последовательный порт %port% строку s и возвращает результат
     @param port - последовательный порт из списка возвращённого функцией %get_serials%
@@ -18,6 +40,8 @@ def query_serial(port, bps, nbits, parity, stopb, s, endstr='', read=True, dtr=N
     @param rts - 1 или 0 или пустая строка
     @return строка из устройства или пустая строка
     """
+    print_dbg(s)
+    print_dbg(endstr)
     try:
         if port[:3] != 'COM':
             if port.find('/dev/') == -1:
@@ -32,8 +56,11 @@ def query_serial(port, bps, nbits, parity, stopb, s, endstr='', read=True, dtr=N
             rts = int(rts)
     except:
         return ''
-    try:	ser = serial.Serial(port, bps, nbits, parity, stopb, timeout=2)
-    except:	return ''
+    try:
+        ser = serial.Serial(port, bps, nbits, parity, stopb, timeout=query_serial.timeout)
+    except:
+        print(sys.exc_info()[1])
+        return ''
     if dtr != None: ser.setDTR(dtr)
     if rts != None: ser.setRTS(rts)
     if s and type(s) == str:
@@ -61,10 +88,11 @@ def query_serial(port, bps, nbits, parity, stopb, s, endstr='', read=True, dtr=N
     else:
         if os.name == 'posix':
             ser.sendBreak()
-    if flushInput:
-        ser.flushInput()
     ser.close()
+    print_dbg(res)
     return res
+query_serial.timeout = 2
+query_serial.verbose = 0
 
 def get_serials():
     """
@@ -88,6 +116,46 @@ def get_serials():
                     break
                 pass
     return ' '.join(res)
+
+def serial_cmd(port='COM1', bps='9600', nbits='8', parity='N', stopb='1', s='', endstr=''):
+    rethex = (s.find('0x') == 0)
+    s = to_bytes(s)
+    endstr = to_bytes(endstr)
+    ret = query_serial(port, bps, nbits, parity, stopb, s, endstr)
+    if type(ret) == bytes:
+        if rethex:
+            ret = '_'.join(['0x%02X' % i for i in ret])
+        else:
+            ret.decode('ascii')
+    ret1 = ''
+    for i in range(0, len(ret)):
+        if ret[i].isprintable():
+            ret1 += ret[i]
+    return ret1
+
+def serial_timeout(timeout=''):
+    if timeout:
+        query_serial.timeout = int(timeout)
+    return '%d' % query_serial.timeout
+
+def serial_verbose(verbose=''):
+    if verbose:
+        query_serial.verbose = 1 if int(verbose) else 0
+    return '%d' % query_serial.verbose
+
+def serial_list():
+    return get_serials()
+
+def serial_tostr(s):
+    ret = ''
+    if s.find('0x') == 0:
+        ss = s.split('_')
+        for i in ss:
+            i = i.replace('0x', '')
+            ch = chr(int(i, 16))
+            if ch.isprintable():
+                ret += ch
+    return ret
 
 if __name__ == '__main__':
     print(get_serials())

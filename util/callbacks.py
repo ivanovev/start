@@ -18,7 +18,7 @@ def msg_trace_cb(k, data):
     setup_tooltip(v, msg)
 
 def telnet_io_cb(dev, cmd):
-    return 'util.telnet %s %s' % (dev[c_ip_addr], cmd)
+    return '%s.telnet %s %s' % (dev[c_type], dev[c_ip_addr], cmd)
 
 def util_io_cb(dev, cmd, prefix='util'):
     cc = cmd.split()

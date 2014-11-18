@@ -1,8 +1,8 @@
 
-import os
+import os, pdb
 import tkinter as tk
 import tkinter.ttk as ttk
-import hashlib
+import binascii, hashlib
 from collections import OrderedDict as OD
 from threading import Thread
 from .control import Control
@@ -10,6 +10,7 @@ from .data import Data
 from .server import proxy
 from .socketio import recv_data, send_data
 from .callbacks import telnet_io_cb
+from .columns import *
 
 class DataIO(Control):
     def __init__(self, data, dev, title='Data IO'):
@@ -29,6 +30,8 @@ class DataIO(Control):
         if txmd5:
             data.add('md5label', label='MD5 sum')
             data.add('md5', wdgt='entry', state='readonly', columnspan=2)
+            data.add('crc32label', label='CRC32 sum')
+            data.add('crc32', wdgt='entry', state='readonly', columnspan=2)
         data.add('send', wdgt='button', text='Write', click_cb=self.write_cb)
 
     def add_rx_cmds(self, data):
@@ -60,21 +63,25 @@ class DataIO(Control):
 
     def update_fsz_md5(self, fname=None):
         try:
+            fsz = 0
             if fname:
                 fsz = os.path.getsize(fname)
-            if 'md5' in self.data.cmds:
-                data = self.get_data()
-                fsz = 0
-                if data:
-                    fsz = len(data)
+            data = self.get_data()
+            if not fsz:
+                fsz = len(data)
+            if data:
+                if type(data) == str:
+                    data = data.encode('ascii')
+                if 'md5' in self.data:
                     m = hashlib.md5()
-                    if type(data) == str:
-                        data = data.encode('ascii')
                     m.update(data)
                     self.data.set_value('md5', m.hexdigest())
-            self.data.set_value('fsz', '%d' % fsz)
-            self.data.set_value('fszhex', '0x%.6X' % fsz)
-            return True
+                if 'crc32' in self.data:
+                    crc = binascii.crc32(data)
+                    self.data.set_value('crc32', '0x%08X' % crc)
+                self.data.set_value('fsz', '%d' % fsz)
+                self.data.set_value('fszhex', '0x%.6X' % fsz)
+                return True
         except:
             return False
 
@@ -82,13 +89,16 @@ class DataIO(Control):
         ip_addr = self.data.get_value('ip_addr')
         fname = self.data.get_value('fname')
         self.fsz = self.dataio_get_fsz()
+        port = 8888
         if self.read:
             self.io_func = recv_data
+            if dev[c_type] == 'SAM7X':
+                port = 8889
         else:
             self.io_func = send_data
         if not self.fsz:
             return
-        self.io_func(ip_addr, fname, self.fsz)
+        self.io_func(ip_addr, port, fname, self.fsz)
         self.io_func.t.join()
 
     def dataio_get_fsz(self):
@@ -115,10 +125,10 @@ class DataIO(Control):
         dev = self.data.dev
         dev['ip_addr'] = self.data.get_value('ip_addr')
         if self.read:
-            if dev['type'] == 'SAM7X':
+            if dev[c_type] == 'SAM7X':
                 return self.tmp_cb1(telnet_io_cb(dev, 'efc tx'), key='fsz')
-            elif dev['type'].find('STM32') == 0:
-                return self.tmp_cb1(telnet_io_cb(dev, 'flash tx2'), key='fsz')
+            elif dev[c_type].find('STM32') == 0:
+                return self.tmp_cb1(telnet_io_cb(dev, 'flash tx1'), key='fsz')
         else:
             if self.data.find_v('fname'):
                 fname = self.data.get_value('fname')
@@ -126,11 +136,12 @@ class DataIO(Control):
                     print('fileopen false', fname)
                     return False
             fsz = self.data.get_value('fsz')
-            md5 = self.data.get_value('md5')
-            if dev['type'] == 'SAM7X':
+            if dev[c_type] == 'SAM7X':
+                md5 = self.data.get_value('md5')
                 return self.tmp_cb1(telnet_io_cb(dev, 'efc rx %s %s %s' % (fsz, evt, md5)), key='fsz')
-            elif dev['type'].find('STM32') == 0:
-                return self.tmp_cb1(telnet_io_cb(dev, 'flash rx %s' % (fsz)), key='fsz')
+            elif dev[c_type].find('STM32') == 0:
+                crc = self.data.get_value('crc32')
+                return self.tmp_cb1(telnet_io_cb(dev, 'flash rx1 %s %s' % (fsz, evt)), key='fsz')
 
     def data_cb1(self, read=True):
         self.filemode = 'rb' if read else 'wb'

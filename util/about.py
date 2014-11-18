@@ -4,6 +4,7 @@ from .info import Info
 from .version import get_version
 from .misc import app_name, app_devdata
 from .server import proxy
+from .columns import *
 
 class About(Info):
     def __init__(self, apps):
@@ -18,7 +19,7 @@ class About(Info):
         total = 0
         devdata = app_devdata(self.apps)
         for p in devdata:
-            devtypes = p['type'].value
+            devtypes = p[c_type].value
             t1 = len(devtypes)
             total += t1
             self.tree_add_lvl0(self.tree, [p.name, '(%d)' % t1])
