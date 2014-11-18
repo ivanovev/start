@@ -75,12 +75,6 @@ commit()
 
 submodule_add()
 {
-    #url="https://github.com/ivanovev/"
-    #case $1 in
-    #'ssh') shift
-    #    url="git@github.com:ivanovev/"
-    #    ;;
-    #esac
     echo "adding submodules: $@"
     for m in $@; do
         echo $m
@@ -100,9 +94,15 @@ submodule_rm()
     done
 }
 
+submodule_pull()
+{
+    for m in $allsubmodules; do
+        (cd $m && git pull)
+    done
+}
+
 submodule()
 {
-    echo $@
     opt=$1
     shift
     if [ "$1" == "ssh" ]
@@ -112,11 +112,13 @@ submodule()
     fi
     submodules=$@
     if [ "$1" == "all" ]; then submodules=$allsubmodules; fi
-    echo $opt $url $submodules
+    #echo $opt $url $submodules
     case $opt in
     'add') submodule_add $submodules
         ;;
     'rm') submodule_rm $submodules
+        ;;
+    'pull') submodule_pull
         ;;
     *) echo 'invalid option: $1'
         return
@@ -139,7 +141,8 @@ case $1 in
         update_version
         commit
         ;;
-'pull') git pull --recurse-submodules=yes
+'pull') git pull
+        $0 submodule pull
         ;;
 'doc')  doxygen $2/config.dox
         tar -C /tmp -cvzf /tmp/${2}_doc.tgz html
