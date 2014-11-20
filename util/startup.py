@@ -76,7 +76,10 @@ def startup(*args):
     apps = []
     for i in args:
         if type(i) == str:
-            i = __import__(i, fromlist=[i])
+            try:
+                i = __import__(i, fromlist=[i])
+            except:
+                continue
         if type(i) == types.ModuleType:
             apps.append(i)
         else:
