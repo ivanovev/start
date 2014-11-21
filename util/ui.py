@@ -314,12 +314,12 @@ class UI:
         cc = tree['columns']
         return cc
 
-    def iteritems(self, item_cb, itemid=None):
+    def iteritems(self, tree, item_cb, itemid=None):
         if itemid == None:
-            items = self.tree.get_children()
+            items = tree.get_children()
         elif itemid != None:
             item_cb(itemid)
-            items = self.tree.get_children(itemid)
+            items = tree.get_children(itemid)
         for i in items:
-            self.iteritems(item_cb, i)
+            self.iteritems(tree, item_cb, i)
 

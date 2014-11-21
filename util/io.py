@@ -17,7 +17,7 @@ class MyIO(list):
     def add(self, cb1, cb2, cb3, thread_func):
         self.append((cb1, cb2, cb3, thread_func))
 
-    def start_thread(self):
+    def start_io_func(self):
         self.t = Thread(target=self.thread_func)
         self.t.start()
 
@@ -33,7 +33,7 @@ class MyIO(list):
             if hasattr(self.wnd, 'pb'):
                 self.wnd.pb['value'] = 0
             self.na = []
-            self.start_thread()
+            self.start_io_func()
             self.wnd.root.config(cursor='watch')
             self.wnd.update_wnd()
             return True
