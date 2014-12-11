@@ -86,7 +86,7 @@ class MyServer(SimpleXMLRPCServer):
         if method not in self.funcs.keys():
             if self.verbose:
                 print('Method lookup error (%s)' % method)
-            return
+            return ''
         if self.idle and method in extras:
             self.verbose_msg(method, params, '0 (idle)')
             return '0'
@@ -97,9 +97,12 @@ class MyServer(SimpleXMLRPCServer):
             pass
         try:
             result = func(*params)
+            if result == None:
+                print('result = None')
+                result = ''
         except:
             print('Failed to call %s' % method, sys.exc_info())
-            result = None
+            result = ''
         sys.stdout = sys.__stdout__
         if self.verbose:
             self.verbose_msg(method, params, result)
@@ -114,11 +117,14 @@ class MyServer(SimpleXMLRPCServer):
             if type(result) == str:
                 rr = result.split()
                 m = ' '.join([m, rr[0]])
-                for i in range(1, len(rr)):
-                    if len(m) + len(rr[i]) + 1 > max_msg_len:
-                        m += '...'
-                        break
-                    m += ' ' + rr[i]
+                if len(m) > max_msg_len:
+                    m = m[0:max_msg_len-3] + '...'
+                else:
+                    for i in range(1, len(rr)):
+                        if len(m) + len(rr[i]) + 1 > max_msg_len:
+                            m += '...'
+                            break
+                        m += ' ' + rr[i]
                 print(m)
             else:
                 print(m, result)
@@ -244,6 +250,7 @@ class MyServer(SimpleXMLRPCServer):
         print('server shutdown')
         self.wait_threads()
         self.quit = 1
+        return ''
 
     def wait_threads(self):
         for k,v in self.funcs.items():
