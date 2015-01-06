@@ -64,7 +64,6 @@ class Setup(Control):
     def ok_cb(self):
         pr = self.data.to_args(self.mode)
         self.root.destroy()
-        print(pr)
         if pr != None:
             proxy.start_process(*pr)
 
@@ -96,7 +95,7 @@ class Setup(Control):
                 return
             self.ylb.insert(tk.END, k)
         self.data.add(k, **v)
-        print(list(self.data.cmds.keys()))
+        #print(list(self.data.cmds.keys()))
 
     def delete_cb(self):
         ysel = self.ylb.curselection()
@@ -107,7 +106,7 @@ class Setup(Control):
         self.data.select('y')
         self.data.cmds.pop(y)
         self.ylb.delete(ysel, ysel)
-        print(list(self.data.cmds.keys()))
+        #print(list(self.data.cmds.keys()))
 
     def init_tabs(self):
         self.tabs = ttk.Notebook(self.fl)
@@ -143,13 +142,15 @@ class Setup(Control):
         self.data.add_page(ax, send=False)
         for k,v in self.dd.items():
             if k in self.src[ax]:
-                print('duplicate item:', k)
+                #print('duplicate item:', k)
                 continue
             self.tree_add_lvl0(tree, [k])
             vv = v['getter'](v)
             data = PlotData(vv)
             data.merge()
             data.update_label()
+            if ax == 'x':
+                data.filter_cmds('spin')
             for k1,v1 in data.cmds.items():
                 v1.dev = v
                 self.tree_add_lvl1(tree, k, [k1, v1.label], expand=False)
