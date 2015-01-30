@@ -97,7 +97,7 @@ submodule_rm()
 submodule_pull()
 {
     for m in $allsubmodules; do
-        (cd $m && git pull)
+        (echo $m && cd $m && git pull)
     done
 }
 

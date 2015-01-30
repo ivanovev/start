@@ -25,7 +25,7 @@ def print_dbg(s):
     else:
         print('empty_str')
 
-def query_serial(port='COM1', bps='9600', nbits='8', parity='N', stopb='1', s='', endstr='', read=True, dtr=None, rts=None, readlen=None):
+def query_serial(port='COM1', bps='9600', nbits='8', parity='N', stopb='1', s='', endstr='', read=True, dtr=None, rts=None, readlen=None, timeout=None):
     """
     Функция посылает в последовательный порт %port% строку s и возвращает результат
     @param port - последовательный порт из списка возвращённого функцией %get_serials%
@@ -56,8 +56,10 @@ def query_serial(port='COM1', bps='9600', nbits='8', parity='N', stopb='1', s=''
             rts = int(rts)
     except:
         return ''
+    if timeout == None:
+        timeout = query_serial.timeout
     try:
-        ser = serial.Serial(port, bps, nbits, parity, stopb, timeout=query_serial.timeout)
+        ser = serial.Serial(port, bps, nbits, parity, stopb, timeout=timeout)
     except:
         print(sys.exc_info()[1])
         return ''
