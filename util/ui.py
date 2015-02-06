@@ -4,23 +4,24 @@ import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import filedialog
 from collections import OrderedDict as OD
+from util.asyncio_tkinter import TkEventLoop
 import pdb
 
 def sel_dec(f):
     def tmp(*args, **kwargs):
         w = args[1]
+        ids = []
         id1 = args[2] if len(args) >= 3 else None
-        if id1 == None:
-            id1 = w.selection()
-            if len(id1) == 0:
+        if not id1:
+            ids = w.selection()
+            if not ids:
                 return
-            id1 = id1[0]
-        args = list(args)
-        if len(args) >= 3:
-            args[2] = id1
         else:
-            args.append(id1)
-        return f(*tuple(args), **kwargs)
+            ids.append(id1)
+        ret = None
+        for id1 in ids:
+            ret = f(args[0], w, id1)
+        return ret
     return tmp
 
 class UI:
@@ -314,12 +315,19 @@ class UI:
         cc = tree['columns']
         return cc
 
-    def iteritems(self, tree, item_cb, itemid=None):
+    def tree_iter(self, tree, itemid=None):
         if itemid == None:
             items = tree.get_children()
         elif itemid != None:
-            item_cb(itemid)
+            yield itemid
             items = tree.get_children(itemid)
         for i in items:
-            self.iteritems(tree, item_cb, i)
+            for j in self.tree_iter(tree, i):
+                yield j
+
+    def mainloop(self):
+        if getattr(self, 'aio', False):
+            TkEventLoop(self.root).mainloop()
+        else:
+            self.root.mainloop()
 

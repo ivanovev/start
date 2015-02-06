@@ -288,7 +288,8 @@ class Mainwnd(tk.Tk, UI):
 
     def filesave(self, fname):
         f = open(fname, 'w')
-        self.iteritems(self.tree, lambda itemid: f.write(json.dumps(self.itemdata(itemid)) + '\n'), None)
+        for id1 in self.tree_iter(self.tree):
+            f.write(json.dumps(self.itemdata(id1)) + '\n')
         f.close()
 
     def get_initialfile(self, read=True):
@@ -314,7 +315,8 @@ class Mainwnd(tk.Tk, UI):
                 if getter != None:
                     dev['getter'] = getter
                     dd[k] = dev
-        self.iteritems(self.tree, dev_cb)
+        for id1 in self.tree_iter(self.tree):
+            dev_cb(id1)
         return dd
 
 def process_cb(mode, dev=None):

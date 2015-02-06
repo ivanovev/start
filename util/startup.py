@@ -120,6 +120,6 @@ def startup(*args):
         app = parse_mode(mode, apps, args, extra_args)
         if app:
             app.center()
-            app.root.mainloop()
+            app.mainloop()
             break
 
