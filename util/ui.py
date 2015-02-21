@@ -4,8 +4,12 @@ import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import filedialog
 from collections import OrderedDict as OD
-from util.asyncio_tkinter import TkEventLoop
+
 import pdb
+try:
+    from util.asyncio_tkinter import TkEventLoop
+except:
+    pass
 
 def sel_dec(f):
     def tmp(*args, **kwargs):

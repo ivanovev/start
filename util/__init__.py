@@ -1,5 +1,4 @@
 
-from .asyncio_tkinter import *
 from .ui import *
 from .io import *
 from .data import *
@@ -13,3 +12,7 @@ from .callbacks import *
 from .version import get_version
 from .mainwnd import control_cb, monitor_cb, process_cb, get_default_filename
 
+try:
+    from .asyncio_tkinter import *
+except:
+    pass

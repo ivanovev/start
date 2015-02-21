@@ -1,6 +1,9 @@
 
 from .io import MyIO
-import asyncio
+try:
+    import asyncio
+except:
+    pass
 
 class MyAIO(MyIO):
     def __init__(self, wnd, *args):
