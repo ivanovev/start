@@ -5,7 +5,7 @@ set srcdir=C:\Share\start
 set srctgz="%srcdir%\%name%.tgz"
 set srctar=%name%.tar
 set s7z="C:\Program Files\7-Zip\7z.exe"
-set cxfreeze="C:\Python33\Scripts\cxfreeze.bat"
+set cxfreeze="C:\Python34\Scripts\cxfreeze.bat"
 
 rem rmdir /S /Q freeze
 rem del "%srcdir%\*.7z"
