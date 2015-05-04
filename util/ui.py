@@ -4,12 +4,10 @@ import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import filedialog
 from collections import OrderedDict as OD
-
 import pdb
-try:
-    from util.asyncio_tkinter import TkEventLoop
-except:
-    pass
+import asyncio
+
+from util.asyncio_tkinter import TkEventLoop, async
 
 def sel_dec(f):
     def tmp(*args, **kwargs):
@@ -122,6 +120,7 @@ class UI:
         if len(fname) == 0:
             return
         if hasattr(self, 'fileopen'):
+            #asyncio.async(async(self.fileopen, fname, *args))
             self.fileopen(fname, *args)
             self.update_title(fname)
 
@@ -319,14 +318,14 @@ class UI:
         cc = tree['columns']
         return cc
 
-    def tree_iter(self, tree, itemid=None):
+    def iter_tree(self, tree, itemid=None):
         if itemid == None:
             items = tree.get_children()
         elif itemid != None:
             yield itemid
             items = tree.get_children(itemid)
         for i in items:
-            for j in self.tree_iter(tree, i):
+            for j in self.iter_tree(tree, i):
                 yield j
 
     def mainloop(self):

@@ -11,7 +11,7 @@ from .acl import Acl
 from .rpc import Rpc
 from .data import Data
 from .server import proxy
-from . import app_name, app_gui, app_iter, get_default_filename
+from . import app_name, app_gui, iter_apps, get_default_filename
 try:
     from .plot import Plot
 except:
@@ -67,7 +67,7 @@ def parse_mode(mode, apps, args, extra_args):
             app = startup_cb(apps, mode, dev)
             if app:
                 return app
-    for m,f in app_iter(apps, '', 'startup_cb'):
+    for m,f in iter_apps(apps, '', 'startup_cb'):
         app = f(apps, mode, dev)
         if app:
             return app

@@ -50,11 +50,11 @@ def app_call_ret(ret):
             ret = ret()
         return ret
 
-def app_iter(apps, mname='', fname='', maxdepth=2):
-    if not hasattr(app_iter, 'apps'):
-        app_iter.apps = apps
-    if apps == None and hasattr(app_iter, 'apps'):
-        apps = app_iter.apps
+def iter_apps(apps, mname='', fname='', maxdepth=2):
+    if not hasattr(iter_apps, 'apps'):
+        iter_apps.apps = apps
+    if apps == None and hasattr(iter_apps, 'apps'):
+        apps = iter_apps.apps
     for a0 in apps:
         n0 = a0.__name__
         for n1 in dir(a0):
@@ -98,7 +98,7 @@ def app_iter(apps, mname='', fname='', maxdepth=2):
 
 def app_tools(apps):
     tools = OD()
-    for m,f in app_iter(apps, 'tools', 'menus', maxdepth=1):
+    for m,f in iter_apps(apps, 'tools', 'menus', maxdepth=1):
         if len(tools):
             tools['separator%d' % len(tools)] = None
         f = app_call_ret(f)
@@ -111,7 +111,7 @@ def app_tools(apps):
 
 def app_srv(apps):
     extras = OD()
-    for m,f in app_iter(apps):
+    for m,f in iter_apps(apps):
         nm = m.__name__
         if nm.find('srv') == -1:
             continue
@@ -124,14 +124,14 @@ def app_srv(apps):
 
 def app_devdata(apps, mname=''):
     devdata = Data()
-    for m,f in app_iter(apps, mname.lower(), 'devdata', maxdepth=0):
+    for m,f in iter_apps(apps, mname.lower(), 'devdata', maxdepth=0):
         d = f()
         devdata.update(d)
     devdata.select(0)
     return devdata
 
 def app_gui(apps, mname, fname):
-    for m,f in app_iter(apps, mname, fname):
+    for m,f in iter_apps(apps, mname, fname):
         return app_call_ret(f)
 
 def app_devtypes(m):

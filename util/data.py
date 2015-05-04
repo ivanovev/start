@@ -289,7 +289,7 @@ class Data(list):
         if hasattr(self, 'dev'):
             return self.dev
 
-    def do_cmds(self, qo, read=True):
+    def iter_cmds(self, read=True):
         cmds = self.cmds
         if not read:
             for k,v in cmds.items():
@@ -317,10 +317,14 @@ class Data(list):
             if v.io_cb:
                 cmd = v.io_cb(dev, cmd)
             cmd = ' '.join([k, cmd])
-            if type(cmd) == str:
-                qo.put(cmd)
-            elif cmd == None and v.l:
+            if not cmd and v.l:
                 v.l.set(0)
+            elif type(cmd) == str:
+                yield cmd
+
+    def do_cmds(self, qo, read=True):
+        for cmd in self.iter_cmds(read):
+            qo.put(cmd)
 
     @staticmethod
     def spn(min_value, max_value, step=1):

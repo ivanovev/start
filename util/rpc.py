@@ -5,6 +5,7 @@ from .control import Control
 from .cache import CachedDict
 from .server import proxy
 from .columns import *
+from .io import MyAIO
 
 import tkinter as tk
 import re
@@ -17,6 +18,7 @@ class Rpc(Control):
         self.cd = CachedDict()
         self.center()
         self.lastsrv = None
+        self.aio = True
 
     def init_layout(self):
         self.pady=5
@@ -232,17 +234,24 @@ class Rpc(Control):
         self.data.set_value('fcount', '%d' % self.lb.size())
 
     def init_io(self):
-        del self.io[:]
-        self.io.add(self.rpc_cb1, self.tmp_cb2, self.rpc_cb3, self.cmdio_thread)
+        self.io = MyAIO(self)
+        self.io.add(self.rpc_cb1, self.rpc_cb2, lambda: False, self.cmdio_async)
 
-    def rpc_cb1(self):
+    def iter_cmds(self):
         self.data.dev = {c_name:'new', c_type:'rpc', c_server:self.data.get_value('srv')}
         m = self.get_method()
         args = self.get_args()
         return self.tmp_cb1(' '.join([m] + args))
 
-    def rpc_cb3(self):
-        s = self.io.ioval['tmp'] if 'tmp' in self.io.ioval else ''
+    def rpc_cb1(self):
+        self.data.dev = {c_name:'new', c_type:'rpc', c_server:self.data.get_value('srv')}
+        m = self.get_method()
+        args = self.get_args()
+        self.qo.put(' '.join(['tmp', m] + args))
+        return True
+
+    def rpc_cb2(self, cmdid, val):
+        s = val
         m = self.get_method()
         srv = self.data.dev[c_server]
         args = self.get_args()

@@ -288,7 +288,7 @@ class Mainwnd(tk.Tk, UI):
 
     def filesave(self, fname):
         f = open(fname, 'w')
-        for id1 in self.tree_iter(self.tree):
+        for id1 in self.iter_tree(self.tree):
             f.write(json.dumps(self.itemdata(id1)) + '\n')
         f.close()
 
@@ -315,7 +315,7 @@ class Mainwnd(tk.Tk, UI):
                 if getter != None:
                     dev['getter'] = getter
                     dd[k] = dev
-        for id1 in self.tree_iter(self.tree):
+        for id1 in self.iter_tree(self.tree):
             dev_cb(id1)
         return dd
 

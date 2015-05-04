@@ -336,7 +336,7 @@ class MyProxy:
             pass
         return False
 
-    def call_method(self, srv, *args, dev=None):
+    def call_method(self, srv, *args):
         if not srv:
             srv = self.get_local_srv()
         if not self.ping_srv(srv):
@@ -407,7 +407,7 @@ class MyProxy:
             if args[0] == args[1]:
                 args.pop(0)
         args.pop(0)
-        return self.call_method(srv, m, *args, dev=dev)
+        return self.call_method(srv, m, *args)
 
     def get_local_srv(self):
         return '127.0.0.1:%d' % self.port
