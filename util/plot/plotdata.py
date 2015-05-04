@@ -2,7 +2,7 @@
 from argparse import ArgumentParser
 from collections import OrderedDict as OD
 
-from .. import Data, Obj, all_columns, c_type, msg_trace_cb
+from .. import Data, all_columns, c_type, msg_trace_cb
 import sys
 import util
 import pdb

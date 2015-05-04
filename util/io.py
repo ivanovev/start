@@ -4,9 +4,10 @@ from collections import OrderedDict as OD
 from time import sleep
 from threading import Thread
 from .server import proxy
+import pdb
 
 import asyncio
-from util.asyncio_tkinter import async
+from .asyncio_tkinter import async
 
 class MyIO(list):
     def __init__(self, wnd, *args):
@@ -56,22 +57,30 @@ class MyAIO(MyIO):
     def __init__(self, wnd, *args):
         MyIO.__init__(self, wnd, *args)
 
+    @asyncio.coroutine
     def start(self, index=0):
-        print('start')
         if index >= len(self):
             return False
         self.cb1, self.cb2, self.cb3, self.io_func = self[index]
         if self.cb1():
-            print('cb1 ok')
             if hasattr(self.wnd, 'pb'):
                 self.wnd.pb['maximum'] = self.wnd.qo.qsize()
                 self.wnd.pb['value'] = 0
             self.wnd.root.config(cursor='watch')
-            print('cursor set')
-            print(self.io_func)
-            print(self.wnd.cmdio_async)
-            asyncio.async(self.io_func())
-            print('cursor unset')
+            while True:
+                try:
+                    obj = self.wnd.qo.get(True, .1)
+                except queue.Empty:
+                    break
+                if obj.m == 'sleep':
+                    yield from async(sleep, float(args))
+                    continue
+                val = yield from async(proxy.call_method2, obj.srv, obj.m, *obj.args)
+                if hasattr(self.wnd, 'pb'):
+                    self.wnd.pb['value'] = self.wnd.pb['value'] + 1
+                self.ioval[obj.cmdid] = val
+                if not self.cb2(obj.cmdid, val):
+                    break
             self.wnd.root.config(cursor='')
             if self.cb3():
                 self.wnd.root.after_idle(lambda: self.start(index+1))
@@ -108,14 +117,13 @@ class IO:
 
     @asyncio.coroutine
     def cmdio_async(self):
-        print('???')
         while True:
             try:
                 cmd = self.qo.get(True, .1)
             except queue.Empty:
                 break
-            print(cmd)
-            if cmd.find('sleep') != -1:
+            #print(cmd)
+            if cmd.find('sleep') == 0:
                 dt = float(cmd.split(' ')[-1])
                 yield from async(sleep, dt)
                 continue

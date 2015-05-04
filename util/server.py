@@ -14,7 +14,7 @@ from .serial import query_serial, get_serials
 from .version import get_version
 
 import binascii, pickle
-import os, subprocess, sys, urllib, pdb
+import os, subprocess, sys, time, urllib, pdb
 
 acl_fname = 'acl.txt'
 
@@ -53,6 +53,7 @@ class MyServer(SimpleXMLRPCServer):
         self.register_function(self.alive, 'srv.alive')
         self.register_function(self.echo1, 'srv.echo')
         self.register_function(self.idle1, 'srv.idle')
+        self.register_function(self.sleep, 'srv.sleep')
         self.register_function(self.verbose1, 'srv.verbose')
         self.register_function(self.stop_server, 'srv.stop')
         self.register_function(self.backend1, 'srv.backend')
@@ -182,6 +183,14 @@ class MyServer(SimpleXMLRPCServer):
         Функция для выяснения состояния сервера
         """
         return '1'
+
+    def sleep(self, dt='3'):
+        """
+        time.sleep(dt)
+        """
+        print('sleep')
+        time.sleep(int(dt))
+        return dt
 
     def lfunc(self, attr, v):
         lret = lambda v: '1' if int(v) else '0'
@@ -337,14 +346,17 @@ class MyProxy:
         return False
 
     def call_method(self, srv, *args):
+        method = args[0]
+        args = args[1:]
+        return self.call_method2(srv, method, *args)
+
+    def call_method2(self, srv, method, *args):
         if not srv:
             srv = self.get_local_srv()
         if not self.ping_srv(srv):
             print('Failed to ping srv', srv)
             return
         ms = self.get_methods(srv)
-        method = args[0]
-        args = args[1:]
         if ms:
             if method in ms:
                 pxy = self.get_proxy(srv)

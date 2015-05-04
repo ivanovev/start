@@ -6,9 +6,13 @@ from .cache import CachedDict
 from .server import proxy
 from .columns import *
 from .io import MyAIO
+from .data import Obj
 
 import tkinter as tk
 import re
+
+import asyncio
+from .asyncio_tkinter import async
 
 from . import Data, Obj
 
@@ -70,7 +74,7 @@ class Rpc(Control):
         self.paned1.add(self.f13, sticky=tk.NSEW, pady=5)
 
         self.add_button(self.fb, 'Clear', self.clear_cb, side=tk.LEFT)
-        self.add_button(self.fb, 'Call', self.call_cb, side=tk.LEFT)
+        self.add_button(self.fb, 'Call', lambda: asyncio.async(self.io.start()), side=tk.LEFT)
 
     def add_checkbutton(self, f, text, cb):
         var = tk.StringVar()
@@ -244,16 +248,16 @@ class Rpc(Control):
         return self.tmp_cb1(' '.join([m] + args))
 
     def rpc_cb1(self):
-        self.data.dev = {c_name:'new', c_type:'rpc', c_server:self.data.get_value('srv')}
+        srv = self.data.get_value('srv')
         m = self.get_method()
         args = self.get_args()
-        self.qo.put(' '.join(['tmp', m] + args))
+        self.qo.put(Obj(srv=srv, m=m, args=args, cmdid='tmp'))
         return True
 
     def rpc_cb2(self, cmdid, val):
         s = val
         m = self.get_method()
-        srv = self.data.dev[c_server]
+        srv = self.data.get_value('srv')
         args = self.get_args()
         if srv != self.lastsrv:
             self.lastsrv = srv
@@ -278,6 +282,7 @@ class Rpc(Control):
             self.text_append(self.txt, '%s: %s error' % (srv, m), newline=True, color='red')
             self.lastsrv = None
 
+    @asyncio.coroutine
     def call_cb(self):
         self.io.start()
 
