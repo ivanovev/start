@@ -334,3 +334,34 @@ class UI:
         else:
             self.root.mainloop()
 
+    def set_cursor(self, cursor):
+        _list = self.root.winfo_children()
+
+        for item in _list :
+            if item.winfo_children():
+                _list.extend(item.winfo_children())
+            if hasattr(item, 'window_names'):
+                _list.extend(map(item.nametowidget, item.window_names()))
+
+        cursors = getattr(self, 'cursors', {})
+        save = bool(cursor and not cursors)
+        if save:
+            self.cursors = cursors
+            for w in _list:
+                sw = str(w)
+                c1 = w.cget('cursor')
+                if c1:
+                    cursors[sw] = c1
+
+        for w in _list:
+            sw = str(w)
+            if cursor:
+                w.config(cursor=cursor)
+            else:
+                if sw in cursors:
+                    w.config(cursor=cursors[sw])
+                else:
+                    w.config(cursor=cursor)
+        if not save:
+            delattr(self, 'cursors')
+

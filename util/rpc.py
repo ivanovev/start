@@ -23,6 +23,7 @@ class Rpc(Control):
         self.center()
         self.lastsrv = None
         self.aio = True
+        self.update_list()
 
     def init_layout(self):
         self.pady=5
@@ -36,12 +37,13 @@ class Rpc(Control):
         self.f1 = tk.Frame(self.paned)
         self.paned.add(self.f1, sticky=tk.NSEW, padx=5)
 
+        listupd_cb = lambda *args: asyncio.async(self.io_listupd.start())
         self.data.add_page('cmds')
         self.data.add('srv', wdgt='entry', label='Server', text=proxy.get_local_srv(), msg='press Enter to reload list')
-        self.data.add('filter', wdgt='combo', label='Filter', state='readonly', value=['*'], text='*', click_cb=self.filter_click_cb, trace_cb=self.update_list)
+        self.data.add('filter', wdgt='combo', label='Filter', state='readonly', value=['*'], text='*', click_cb=self.filter_click_cb, trace_cb=listupd_cb)
         self.f11 = self.init_frame(self.f1, self.data.cmds, cw0=0)
         self.f11.pack(fill=tk.BOTH, expand=0)
-        self.data.cmds['srv'].w.bind('<Return>', lambda evt: self.update_list())
+        self.data.cmds['srv'].w.bind('<Return>', listupd_cb)
 
         self.paned1 = tk.PanedWindow(self.f1, orient=tk.VERTICAL, sashrelief=tk.RAISED)
         self.paned1.pack(fill=tk.BOTH, expand=1)
@@ -67,7 +69,7 @@ class Rpc(Control):
         self.add_fb()
         self.add_button(self.fb, 'Close', self.root.destroy)
         self.wrap = self.add_checkbutton(self.fb, 'Wrap', self.wrap_words_cb)
-        self.update_list()
+        #self.update_list()
 
     def init_custom_layout(self):
         self.f13 = tk.Frame(self.paned1)
@@ -121,7 +123,7 @@ class Rpc(Control):
             return
         f = self.init_frame(self.f13, cmds, cw0=0)
         for v in cmds.values():
-            v['w'].bind('<Return>', lambda evt: self.call_cb())
+            v['w'].bind('<Return>', lambda evt: asyncio.async(self.io.start()))
         return f
 
     def get_method_args(self):
@@ -239,7 +241,9 @@ class Rpc(Control):
 
     def init_io(self):
         self.io = MyAIO(self)
-        self.io.add(self.rpc_cb1, self.rpc_cb2, lambda: False, self.cmdio_async)
+        self.io.add(self.rpc_cb1, self.rpc_cb2)
+        self.io_listupd = MyAIO(self)
+        self.io_listupd.add(self.listupd_cb1)
 
     def iter_cmds(self):
         self.data.dev = {c_name:'new', c_type:'rpc', c_server:self.data.get_value('srv')}
@@ -274,13 +278,30 @@ class Rpc(Control):
             self.text_append(self.txt, '', newline=True)
             self.txt.see(tk.END)
             l = m + '(' + ', '.join(args) + ')'
-            link = tk.Label(self.txt, text=l, cursor="left_ptr")
+            link = tk.Label(self.txt, text=l, cursor="hand1")
             link.bind("<1>", lambda *args, srv=srv, l=l: self.txt_click_cb(srv, l))
             self.txt.window_create(tk.END, window=link)
             self.text_append(self.txt, ' = ' + s, newline=False)
+            if hasattr(self, 'cursors'):
+                self.cursors[str(link)] = link.cget('cursor')
         else:
             self.text_append(self.txt, '%s: %s error' % (srv, m), newline=True, color='red')
             self.lastsrv = None
+
+    def listupd_cb1(self):
+        srv = self.data.get_value('srv')
+        fltr = self.data.get_value('filter')
+        self.mm = proxy.get_methods(srv)
+        self.lb.delete(0, tk.END)
+        if self.mm:
+            for l in self.mm:
+                if re.match(fltr, l) != None if fltr != '*' else True:
+                    self.lb.insert(tk.END, l)
+        if hasattr(self, 'fa'):
+            self.fa.pack_forget()
+            delattr(self, 'fa')
+        self.data.set_value('fcount', '%d' % self.lb.size())
+        return False
 
     @asyncio.coroutine
     def call_cb(self):

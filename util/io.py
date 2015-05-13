@@ -1,6 +1,7 @@
 
 import queue
 from collections import OrderedDict as OD
+from datetime import datetime, timedelta
 from time import sleep
 from threading import Thread
 from .server import proxy
@@ -8,6 +9,17 @@ import pdb
 
 import asyncio
 from .asyncio_tkinter import async
+
+def time_dec(f):
+    def tmp(*args, **kwargs):
+        t1 = datetime.now()
+        ret = f(*args, **kwargs)
+        t2 = datetime.now()
+        dt = t2 - t1
+        dt = dt.seconds + float(dt.microseconds)/10e6
+        print('duration: %.3f' % dt)
+        return ret
+    return tmp
 
 class MyIO(list):
     def __init__(self, wnd, *args):
@@ -57,16 +69,22 @@ class MyAIO(MyIO):
     def __init__(self, wnd, *args):
         MyIO.__init__(self, wnd, *args)
 
+    def add(self, cb1, cb2=lambda *args: False, cb3=lambda: False, thread_func=lambda: False):
+        self.append((cb1, cb2, cb3, thread_func))
+
     @asyncio.coroutine
     def start(self, index=0):
+        t1 = datetime.now()
         if index >= len(self):
             return False
         self.cb1, self.cb2, self.cb3, self.io_func = self[index]
-        if self.cb1():
+        #self.wnd.root.config(cursor='watch')
+        self.wnd.set_cursor('watch')
+        val = yield from async(self.cb1)
+        if val:
             if hasattr(self.wnd, 'pb'):
                 self.wnd.pb['maximum'] = self.wnd.qo.qsize()
                 self.wnd.pb['value'] = 0
-            self.wnd.root.config(cursor='watch')
             while True:
                 try:
                     obj = self.wnd.qo.get(True, .1)
@@ -81,9 +99,15 @@ class MyAIO(MyIO):
                 self.ioval[obj.cmdid] = val
                 if not self.cb2(obj.cmdid, val):
                     break
-            self.wnd.root.config(cursor='')
-            if self.cb3():
-                self.wnd.root.after_idle(lambda: self.start(index+1))
+            val = yield from async(self.cb3)
+            if val:
+                self.wnd.root.after_idle(lambda: asyncio.async(self.start(index+1)))
+        #self.wnd.root.config(cursor='')
+        self.wnd.set_cursor('')
+        t2 = datetime.now()
+        dt = t2 - t1
+        dt = dt.seconds + float(dt.microseconds)/10e6
+        print('duration: %.3f' % dt)
 
 class IO:
     def __init__(self):
