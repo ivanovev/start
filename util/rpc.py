@@ -9,10 +9,9 @@ from .io import MyAIO
 from .data import Obj
 
 import tkinter as tk
-import re
+import re, time, pdb
 
 import asyncio
-from .asyncio_tkinter import async
 
 from . import Data, Obj
 
@@ -23,7 +22,8 @@ class Rpc(Control):
         self.center()
         self.lastsrv = None
         self.aio = True
-        self.update_list()
+        self.root.bind('<Activate>', self.activate_cb, '+')
+        self.listupd_cb1()
 
     def init_layout(self):
         self.pady=5
@@ -37,21 +37,22 @@ class Rpc(Control):
         self.f1 = tk.Frame(self.paned)
         self.paned.add(self.f1, sticky=tk.NSEW, padx=5)
 
-        listupd_cb = lambda *args: asyncio.async(self.io_listupd.start())
+        self.listupd_cb = lambda *args: asyncio.async(self.io_listupd.start())
         self.data.add_page('cmds')
         self.data.add('srv', wdgt='entry', label='Server', text=proxy.get_local_srv(), msg='press Enter to reload list')
-        self.data.add('filter', wdgt='combo', label='Filter', state='readonly', value=['*'], text='*', click_cb=self.filter_click_cb, trace_cb=listupd_cb)
+        self.data.add('filter', wdgt='combo', label='Filter', state='readonly', value=['*'], text='*', click_cb=self.filter_click_cb, trace_cb=self.listupd_cb)
         self.f11 = self.init_frame(self.f1, self.data.cmds, cw0=0)
         self.f11.pack(fill=tk.BOTH, expand=0)
-        self.data.cmds['srv'].w.bind('<Return>', listupd_cb)
+        self.data.cmds['srv'].w.bind('<Return>', self.listupd_cb)
 
         self.paned1 = tk.PanedWindow(self.f1, orient=tk.VERTICAL, sashrelief=tk.RAISED)
         self.paned1.pack(fill=tk.BOTH, expand=1)
 
+        self.argsupd_cb = lambda *args: asyncio.async(self.io_argsupd.start())
         f12 = tk.Frame(self.paned1)
         self.paned1.add(f12, sticky=tk.NSEW, pady=5)
         self.lb = tk.Listbox(f12)#, selectmode=tk.SINGLE)
-        self.lb.bind('<<ListboxSelect>>', self.method_change_cb)
+        self.lb.bind('<<ListboxSelect>>', self.argsupd_cb)
         self.add_widget_with_scrolls(f12, self.lb)
 
         self.data.add_page('func')
@@ -69,7 +70,6 @@ class Rpc(Control):
         self.add_fb()
         self.add_button(self.fb, 'Close', self.root.destroy)
         self.wrap = self.add_checkbutton(self.fb, 'Wrap', self.wrap_words_cb)
-        #self.update_list()
 
     def init_custom_layout(self):
         self.f13 = tk.Frame(self.paned1)
@@ -93,7 +93,7 @@ class Rpc(Control):
             self.txt.configure(wrap=tk.NONE)
 
     def get_method(self):
-        if self.mm:
+        if getattr(self, 'mm', False):
             cursel = self.lb.curselection()
             if len(cursel) > 0:
                 return self.lb.get(int(cursel[0]))
@@ -101,8 +101,8 @@ class Rpc(Control):
                 return self.m
 
     def filter_click_cb(self, data):
-        self.update_list()
-        if self.mm:
+        self.listupd_cb()
+        if hasattr(self, 'mm'):
             x = set()
             for m in self.mm:
                 a = m.split('.')[0]
@@ -123,7 +123,10 @@ class Rpc(Control):
             return
         f = self.init_frame(self.f13, cmds, cw0=0)
         for v in cmds.values():
-            v['w'].bind('<Return>', lambda evt: asyncio.async(self.io.start()))
+            w = v['w']
+            w.bind('<Return>', lambda evt: asyncio.async(self.io.start()))
+            if hasattr(self, 'cursors'):
+                self.cursors[str(w)] = w.cget('cursor')
         return f
 
     def get_method_args(self):
@@ -165,7 +168,7 @@ class Rpc(Control):
         t = list(self.lb.get(0, self.lb.size()))
         if m not in t:
             self.data.set_value('filter', '*')
-            self.update_list(self)
+            self.listupd_cb1()
             self.root.update_idletasks()
             return self.select_method(m)
         i = t.index(m)
@@ -188,7 +191,7 @@ class Rpc(Control):
         #self.data.set_value('method', m)
         for i in range(0, len(cc)):
             cc[i] = cc[i].strip()
-        self.method_change_cb()
+        self.argsupd_cb1()
         self.root.update_idletasks()
         cmds = self.cd.get(self.get_method_args, 'srv', srv, m, 'cmds')
         kk = list(cmds.keys())
@@ -202,58 +205,18 @@ class Rpc(Control):
         self.text_clear(self.txt)
         self.lastsrv = None
 
-    def method_change_cb(self, *args):
-        srv = self.data.get_value('srv')
-        m = self.get_method()
-        if hasattr(self, 'fa'):
-            self.fa.pack_forget()
-            delattr(self, 'fa')
-        if m == None:
-            return
-        fa = self.cd.get(self.get_method_argsframe, 'srv', srv, m, 'frame')
-        if fa == None:
-            self.root.update_idletasks()
-            self.text_append(self.txt, '%s: get signature %s failed' % (srv, m), newline=True, color='red')
-            return
-        self.fa = fa
-        self.m = m
-        self.fa.pack(fill=tk.BOTH, expand=0)
-        self.root.update_idletasks()
-        wa = self.fa.winfo_width()
-        w = self.f13.winfo_width()
-        if wa > w:
-            self.paned.sash_place(0, wa + 1, 1)
-        self.lb.see(self.lb.curselection()[0])
-
-    def update_list(self, *args):
-        srv = self.data.get_value('srv')
-        fltr = self.data.get_value('filter')
-        self.mm = proxy.get_methods(srv)
-        self.lb.delete(0, tk.END)
-        if self.mm:
-            for l in self.mm:
-                if re.match(fltr, l) != None if fltr != '*' else True:
-                    self.lb.insert(tk.END, l)
-        if hasattr(self, 'fa'):
-            self.fa.pack_forget()
-            delattr(self, 'fa')
-        self.data.set_value('fcount', '%d' % self.lb.size())
-
     def init_io(self):
         self.io = MyAIO(self)
         self.io.add(self.rpc_cb1, self.rpc_cb2)
         self.io_listupd = MyAIO(self)
         self.io_listupd.add(self.listupd_cb1)
+        self.io_argsupd = MyAIO(self)
+        self.io_argsupd.add(self.argsupd_cb1)
 
-    def iter_cmds(self):
-        self.data.dev = {c_name:'new', c_type:'rpc', c_server:self.data.get_value('srv')}
-        m = self.get_method()
-        args = self.get_args()
-        return self.tmp_cb1(' '.join([m] + args))
-
-    def rpc_cb1(self):
+    def rpc_cb1(self, m=None):
         srv = self.data.get_value('srv')
-        m = self.get_method()
+        if not m:
+            m = self.get_method()
         args = self.get_args()
         self.qo.put(Obj(srv=srv, m=m, args=args, cmdid='tmp'))
         return True
@@ -289,9 +252,14 @@ class Rpc(Control):
             self.lastsrv = None
 
     def listupd_cb1(self):
+        if hasattr(self, 'mm'):
+            delattr(self, 'mm')
         srv = self.data.get_value('srv')
         fltr = self.data.get_value('filter')
-        self.mm = proxy.get_methods(srv)
+        mm = proxy.get_methods(srv)
+        if not mm:
+            return False
+        self.mm = mm
         self.lb.delete(0, tk.END)
         if self.mm:
             for l in self.mm:
@@ -303,7 +271,29 @@ class Rpc(Control):
         self.data.set_value('fcount', '%d' % self.lb.size())
         return False
 
-    @asyncio.coroutine
-    def call_cb(self):
-        self.io.start()
+    def argsupd_cb1(self):
+        srv = self.data.get_value('srv')
+        m = self.get_method()
+        if hasattr(self, 'fa'):
+            self.fa.pack_forget()
+            delattr(self, 'fa')
+        if m == None:
+            return
+        fa = self.cd.get(self.get_method_argsframe, 'srv', srv, m, 'frame')
+        if fa == None:
+            self.root.update_idletasks()
+            self.text_append(self.txt, '%s: get signature %s failed' % (srv, m), newline=True, color='red')
+            return
+        self.fa = fa
+        self.m = m
+        self.fa.pack(fill=tk.BOTH, expand=0)
+        self.root.update_idletasks()
+        wa = self.fa.winfo_width()
+        w = self.f13.winfo_width()
+        if wa > w:
+            self.paned.sash_place(0, wa + 1, 1)
+        self.lb.see(self.lb.curselection()[0])
+
+    def activate_cb(self, *args):
+        print('activate')
 

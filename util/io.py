@@ -69,15 +69,15 @@ class MyAIO(MyIO):
     def __init__(self, wnd, *args):
         MyIO.__init__(self, wnd, *args)
 
-    def add(self, cb1, cb2=lambda *args: False, cb3=lambda: False, thread_func=lambda: False):
-        self.append((cb1, cb2, cb3, thread_func))
+    def add(self, cb1, cb2=lambda *args: False, cb3=lambda: False):
+        self.append((cb1, cb2, cb3))
 
     @asyncio.coroutine
     def start(self, index=0):
         t1 = datetime.now()
         if index >= len(self):
             return False
-        self.cb1, self.cb2, self.cb3, self.io_func = self[index]
+        self.cb1, self.cb2, self.cb3 = self[index]
         #self.wnd.root.config(cursor='watch')
         self.wnd.set_cursor('watch')
         val = yield from async(self.cb1)

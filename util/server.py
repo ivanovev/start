@@ -436,6 +436,12 @@ class MyProxy:
         pxy = self.get_proxy(srv)
         return self.cd.get(lambda: pxy.system.listMethods().split(), srv, 'methods')
 
+    def get_methods_cached(self, srv=None):
+        if srv == None:
+            srv = self.get_local_srv()
+        pxy = self.get_proxy(srv)
+        return self.cd.find(srv, 'methods')
+
     def call_telnet(self, dev, *args):
         srv = dev['server'] if dev else self.get_local_srv()
         if dev:

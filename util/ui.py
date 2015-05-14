@@ -155,7 +155,6 @@ class UI:
     def center(self, show=True):
         W = self.root.winfo_screenwidth()
         H = self.root.winfo_screenheight()
-        #self.root.update_idletasks()
         self.root.update()
         width = self.root.winfo_reqwidth()
         height = self.root.winfo_reqheight()
