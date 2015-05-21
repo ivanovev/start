@@ -6,7 +6,7 @@ import concurrent
 import threading
 from asyncio import futures
 
-_MAX_WORKERS = 10
+_MAX_WORKERS = 1
 
 class GuiEventLoop(BaseEventLoop):
     # Methods returning Futures for interacting with threads.

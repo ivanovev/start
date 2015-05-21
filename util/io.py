@@ -78,10 +78,10 @@ class MyAIO(MyIO):
         if index >= len(self):
             return False
         self.cb1, self.cb2, self.cb3 = self[index]
-        #self.wnd.root.config(cursor='watch')
-        self.wnd.set_cursor('watch')
         val = yield from async(self.cb1)
         if val:
+            self.wnd.root.config(cursor='watch')
+            #self.wnd.set_cursor('watch')
             if hasattr(self.wnd, 'pb'):
                 self.wnd.pb['maximum'] = self.wnd.qo.qsize()
                 self.wnd.pb['value'] = 0
@@ -93,17 +93,18 @@ class MyAIO(MyIO):
                 if obj.m == 'sleep':
                     yield from async(sleep, float(args))
                     continue
-                val = yield from async(proxy.call_method2, obj.srv, obj.m, *obj.args)
+                args = obj.args if obj.args else []
+                val = yield from async(proxy.call_method2, obj.srv, obj.cmd, *args)
                 if hasattr(self.wnd, 'pb'):
                     self.wnd.pb['value'] = self.wnd.pb['value'] + 1
                 self.ioval[obj.cmdid] = val
                 if not self.cb2(obj.cmdid, val):
                     break
+            self.wnd.root.config(cursor='')
+            #self.wnd.set_cursor('')
             val = yield from async(self.cb3)
             if val:
                 self.wnd.root.after_idle(lambda: asyncio.async(self.start(index+1)))
-        #self.wnd.root.config(cursor='')
-        self.wnd.set_cursor('')
         t2 = datetime.now()
         dt = t2 - t1
         dt = dt.seconds + float(dt.microseconds)/10e6
@@ -138,32 +139,6 @@ class IO:
                 val = ''
             s = '%s %s' % (cmdid, val)
             self.qi.put(s)
-
-    @asyncio.coroutine
-    def cmdio_async(self):
-        while True:
-            try:
-                cmd = self.qo.get(True, .1)
-            except queue.Empty:
-                break
-            #print(cmd)
-            if cmd.find('sleep') == 0:
-                dt = float(cmd.split(' ')[-1])
-                yield from async(sleep, dt)
-                continue
-            cmdid,cmd = cmd.split(' ', 1)
-            dev = self.data.get_dev(cmdid)
-            k = '.'.join([dev['name'], dev['type']])
-            if k in self.io.na:
-                continue
-            val = yield from async(proxy.call, dev, cmd)
-            if not val:
-                self.io.na.append(k)
-                val = ''
-            if hasattr(self, 'pb'):
-                self.pb['value'] = self.pb['value'] + 1
-            self.io.ioval[cmdid] = val
-            self.io.cb2(cmd, val)
 
     def update_wnd(self):
         if not self.io.t.is_alive() and self.qi.qsize() == 0 and self.qo.qsize() == 0:

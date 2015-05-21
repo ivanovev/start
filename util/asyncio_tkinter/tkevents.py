@@ -13,6 +13,7 @@ class TkEventLoop(GuiEventLoop):
 
     def mainloop(self):
         set_event_loop(self)
+        self.app.event_generate('<<mainloop>>')
         try:
             self.run_forever()
         finally:

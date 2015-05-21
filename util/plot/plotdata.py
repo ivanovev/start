@@ -134,6 +134,7 @@ class PlotData(Data):
             v.update(vi)
             v.dev = dev
             v.label = label
+            v.send = True
             return True
         for l in [['x', 1], ['y', 10]]:
             m, n = l

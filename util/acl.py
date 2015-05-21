@@ -19,7 +19,7 @@ class Acl(Control):
 
         self.add_fb()
         self.add_button(self.fb, 'Close', self.root.destroy)
-        self.add_button(self.fb, 'Apply', self.apply)
+        self.add_button(self.fb, 'Apply', self.apply_acl)
         self.add_button(self.fb, 'Remove', self.remove)
         self.add_button(self.fb, 'Add', self.add)
         self.center()
@@ -47,7 +47,7 @@ class Acl(Control):
         sel = sel[0]
         self.lb.delete(int(sel))
 
-    def apply(self):
+    def apply_acl(self):
         data = self.lb.get(0, tk.END)
         l = []
         for i in data:

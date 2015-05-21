@@ -5,18 +5,18 @@ from .server import MyServer, proxy
 class Rpcinfo(Rpc):
     def __init__(self, do_modal=True):
         Rpc.__init__(self, title='RPC Info')
+        self.cdkey = 'hlp'
+        self.cdkeym = 'system.methodHelp'
 
     def init_custom_layout(self):
         pass
 
-    def argsupd_cb1(self, *args):
+    def argsupd_cb3(self):
         srv = self.data.get_value('srv')
-        m = self.get_method()
-        if not srv or not m:
-            return
-        doc = self.cd.get(lambda: MyServer.unhexlify(proxy.call_method(srv, 'system.methodHelp', m)), srv, m)
-        if doc != None:
+        doc = proxy.cd.get(lambda: obj, srv, self.m, self.cdkey)
+        if doc:
             self.text_append(self.txt, doc, clear=True)
         else:
-            self.text_append(self.txt, 'Server %s not available' % srv, clear=True, color='red')
+            self.text_append(self.txt, 'Failed to get method help for %s from server %s' % (self.m, srv), clear=True, color='red')
+        self.lb.config(state='normal')
 

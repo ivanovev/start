@@ -60,7 +60,7 @@ class Obj(dict):
         return Obj(dict(self))
 
 class Data(list):
-    def __init__(self, name=None, cmds=None, send=None, buttons=None, io_cb=None):
+    def __init__(self, name=None, cmds=None, send=None, buttons=None, io_cb=None, **kwargs):
         list.__init__(self)
         self.cur = 0
         self.send = send
@@ -227,6 +227,18 @@ class Data(list):
         if fbn != None:
             return self[fbn]
 
+    def next_k(self, k):
+        kk = list(self.cmds.keys())
+        if k not in kk:
+            return
+        if kk.index(k) < len(self.cmds) - 1:
+            return kk[kk.index(k) + 1]
+        n = self.index(self.cmds) + 1
+        if n < len(self):
+            self.select(n)
+            kk = list(self.cmds.keys())
+            return kk[0]
+
     def trace_cb(self, k, v):
         if v.l:
             v.l.set('1')
@@ -242,7 +254,7 @@ class Data(list):
             v.t.trace_vdelete('w', v.cbname)
             v.pop('cbname')
 
-    def set_value(self, k, s, set_send=True, skip_trace_cb=False):
+    def set_value(self, k, s, set_send=True, skip_trace_cb=False, iter_next=True):
         if k == 'tmp':
             return
         if s == '':
@@ -271,6 +283,11 @@ class Data(list):
             self.trace_add(k, v)
         if v.l and set_send:
             v.l.set(1)
+        if iter_next:
+            k = self.next_k(k)
+            if k:
+                self.set_value(k, s_orig)
+        '''
         kk = list(self.cmds.keys())
         if k not in kk:
             return
@@ -280,6 +297,7 @@ class Data(list):
         v = self.cmds[k]
         if not v.send and v.fmt_cb:
             self.set_value(k, s_orig)
+        '''
 
     def get_dev(self, k):
         v = self.find_v(k)
@@ -325,6 +343,42 @@ class Data(list):
     def do_cmds(self, qo, read=True):
         for cmd in self.iter_cmds(read):
             qo.put(cmd)
+
+    def iter_cmds2(self, read=True):
+        cmds = self.cmds
+        if not read:
+            for k,v in cmds.items():
+                if not v.send and v.fmt_cb:
+                    val = self.get_value(k)
+                    v.fmt_cb(val, read)
+        for k,v in cmds.items():
+            if not v.send:
+                continue
+            if v.l.get() != '1' if v.l else False:
+                continue
+            cmd = v.cmd if v.cmd else k
+            val = None
+            dev = self.get_dev(k)
+            obj = Obj(cmdid=k, dev=dev)
+            if not read:
+                val = self.get_value(k)
+                if val == '': continue
+                if v.fmt_cb:
+                    val = v.fmt_cb(val, read)
+                if type(val) == int: val = str(val)
+            if v.cmd_cb:
+                cmd = v.cmd_cb(dev, cmd, val)
+            elif val != None:
+                cmd = ' '.join([cmd, val])
+            if v.io_cb:
+                cmd = v.io_cb(dev, cmd)
+            c,a = cmd.split(' ', 1)
+            obj.cmd = c
+            obj.args = a.split()
+            if not cmd and v.l:
+                v.l.set(0)
+            elif type(cmd) == str:
+                yield obj
 
     @staticmethod
     def spn(min_value, max_value, step=1):

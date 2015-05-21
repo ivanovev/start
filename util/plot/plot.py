@@ -10,11 +10,14 @@ from collections import OrderedDict as OD
 from datetime import datetime, timedelta
 from itertools import chain
 
+import asyncio
 import tkinter as tk
 import tkinter.ttk as ttk
 
 from ..control import Control
 from ..monitor import Monitor
+from ..io import MyAIO
+from ..columns import c_server
 
 from .plotdata import PlotData
 from .setup import get_cmdsx
@@ -32,8 +35,10 @@ class Plot(Monitor):
         self.root.title('Plot f(x)' if mode == 'fx' else 'Plot f(t)')
         self.fileext = 'csv'
         self.stop = False
-        #self.data.print_data()
-        self.after_plot = self.root.after_idle(self.io.start)
+        self.aio = True
+        self.io_start = lambda *args: asyncio.async(self.io.start())
+        self.root.bind('<<mainloop>>', self.io_start)
+        #self.after_plot = self.root.after_idle(self.io.start)
 
     def add_menu_view(self):
         menu_view = tk.Menu(self.menubar, tearoff=0)
@@ -62,13 +67,10 @@ class Plot(Monitor):
         dlg.do_modal()
         if not hasattr(dlg, 'kw'):
             return
-        if self.plot_upd:
-            self.root.after_cancel(self.plot_upd)
         for i in ['span', 'dt']:
             self.data.set_value(i, dlg.kw[i])
             self.data.set_value('%sunits' % i, dlg.kw['%sunits' % i])
         self.update_formatter()
-        self.root.after_idle(self.io.start)
 
     def update_formatter(self):
         if self.mode == 'ft':
@@ -91,7 +93,8 @@ class Plot(Monitor):
         self.add_menu_file(file_open=False, file_save=False, file_saveas=False, file_export=True)
         self.add_menu_edit()
         self.add_menu_view()
-        self.root.protocol('WM_DELETE_WINDOW', self.exit_cb)
+        self.root.protocol('WM_DELETE_WINDOW', lambda: [self.root.withdraw(), setattr(self, 'stop', True)])
+        #self.root.protocol('WM_DELETE_WINDOW', self.exit_cb)
         self.fig = Figure(figsize=(5,4), dpi=100)
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.frame)
         self.canvas.show()
@@ -165,15 +168,33 @@ class Plot(Monitor):
             self.stop = True
 
     def exit_cb(self, *args):
-        self.root.withdraw()
-        self.root.destroy()
-        sys.exit(0)
+        self.root.after(1000, self.root.quit)
+        #self.root.withdraw()
+        #self.root.quit()
+        #sys.exit(0)
 
     def init_io(self):
-        del self.io[:]
-        self.io.add(self.plot_cb1, self.mntr_cb2, self.plot_cb3, self.cmdio_thread)
+        self.io = MyAIO(self)
+        self.io.add(self.plot_cb1, self.plot_cb2, self.plot_cb3)
+        #del self.io[:]
+        #self.io.add(self.plot_cb1, self.mntr_cb2, self.plot_cb3, self.cmdio_thread)
 
     def plot_cb1(self):
+        self.plot_upd = None
+        if self.stop:
+            self.exit_cb()
+            return False
+        elif self.mode == 'fx':
+            self.x = 1
+        elif self.mode == 'ft':
+            self.xlim = self.get_xlim()
+            self.x = self.xlim[1]
+        self.data.select('y')
+        for obj in self.data.iter_cmds2():
+            obj.srv = obj.dev[c_server]
+            self.qo.put(obj)
+        return True
+        '''
         self.plot_upd = None
         if self.stop:
             self.exit_cb()
@@ -197,6 +218,11 @@ class Plot(Monitor):
         self.read = True
         self.data.select('y')
         self.data.do_cmds(self.qo, read=True)
+        return True
+        '''
+
+    def plot_cb2(self, cmdid, val):
+        self.data.set_value(cmdid, val, iter_next=False)
         return True
 
     def next_prev_x(self, nextx=True):
@@ -234,6 +260,9 @@ class Plot(Monitor):
         return x
 
     def plot_cb3(self, io_start_after_idle=True):
+        if self.stop:
+            self.exit_cb()
+            return
         x = self.x
         cmds = self.data['y']
         kk = list(cmds.keys())
@@ -269,7 +298,7 @@ class Plot(Monitor):
         self.redraw_all()
         if self.mode == 'ft':
             dt = self.data.get_milliseconds('dt')
-            self.plot_upd = self.root.after(dt, self.io.start)
+            self.plot_upd = self.root.after(dt, self.io_start)
         elif self.mode == 'fx':
             self.data.select('fx')
             x1, x2 = self.get_xlim()
@@ -278,9 +307,9 @@ class Plot(Monitor):
                 if getattr(self, 'savefig', False):
                     self.savefig_and_exit()
                 return False
-            if io_start_after_idle:
-                self.root.after_idle(self.io.start)
-            return True
+            #if io_start_after_idle:
+                #self.root.after_idle(self.io.start)
+            #return True
 
     def redraw_all(self):
         pause = int(self.pause.get())

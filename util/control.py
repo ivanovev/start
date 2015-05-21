@@ -113,7 +113,7 @@ class Control(UI, IO):
         if cmd.wdgt == 'combo':
             name = self.key_to_name(k)
             w = ttk.Combobox(f1, name=name, textvariable=cmd.t)
-            w['values'] = vv
+            w['value'] = vv
         elif cmd.wdgt == 'entry':
             w = tk.Entry(f1, textvariable=cmd.t)
             if cmd.width:
@@ -272,9 +272,9 @@ class Control(UI, IO):
             self.pb['value'] = self.pb['value'] + 1
         if line.find('step') != -1:
             return
-        cmd, val = line.split(' ', 1)
+        cmdid, val = line.split(' ', 1)
         if val and self.read:
-            self.data.set_value(cmd, val)
+            self.data.set_value(cmdid, val)
         else:
             return False
         return True
