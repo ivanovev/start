@@ -75,10 +75,8 @@ class MyAIO(MyIO):
     @asyncio.coroutine
     def start(self, index=0):
         t1 = datetime.now()
-        if index >= len(self):
-            return False
-        self.cb1, self.cb2, self.cb3 = self[index]
-        val = yield from async(self.cb1)
+        cb1, cb2, cb3 = self[index]
+        val = cb1()
         if val:
             self.wnd.root.config(cursor='watch')
             #self.wnd.set_cursor('watch')
@@ -91,20 +89,21 @@ class MyAIO(MyIO):
                 except queue.Empty:
                     break
                 if obj.m == 'sleep':
-                    yield from async(sleep, float(args))
+                    yield from async(sleep, float(obj.args))
                     continue
                 args = obj.args if obj.args else []
                 val = yield from async(proxy.call_method2, obj.srv, obj.cmd, *args)
                 if hasattr(self.wnd, 'pb'):
                     self.wnd.pb['value'] = self.wnd.pb['value'] + 1
                 self.ioval[obj.cmdid] = val
-                if not self.cb2(obj.cmdid, val):
+                if not cb2(obj.cmdid, val):
                     break
             self.wnd.root.config(cursor='')
             #self.wnd.set_cursor('')
-            val = yield from async(self.cb3)
-            if val:
-                self.wnd.root.after_idle(lambda: asyncio.async(self.start(index+1)))
+            val = cb3()
+            index += 1
+            if val and index < len(self):
+                self.wnd.root.after_idle(lambda: asyncio.async(self.start(index)))
         t2 = datetime.now()
         dt = t2 - t1
         dt = dt.seconds + float(dt.microseconds)/10e6

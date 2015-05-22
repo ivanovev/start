@@ -8,18 +8,25 @@ from math import ceil
 
 from .control import Control
 from .tooltip import ToolTip
+from .columns import c_server
+from .io import MyAIO
 
+import asyncio
 import sys, pdb
 
 class Monitor(Control):
     def __init__(self, data=None, dev=None):
+        self.aio = True
+        self.io_start = lambda *args, index=0: asyncio.async(self.io.start(index))
         Control.__init__(self, data=data, dev=dev)
+        self.root.bind('<<mainloop>>', self.io_start)
+        #self.after_mntr = self.root.after_idle(self.io.start)
 
     def add_menu_dt(self):
         self.dt = tk.StringVar(value=15)
         self.menu = tk.Menu(self.root, tearoff=0)
         for i in [1, 2, 3, 5, 10, 15, 30, 60, 120]:
-            self.menu.add_radiobutton(label='%ds'%i, variable=self.dt, value='%d'%i, command=lambda: self.mntr_io_start(self.io.start))
+            self.menu.add_radiobutton(label='%ds'%i, variable=self.dt, value='%d'%i, command=self.io_start)
         self.root.bind("<ButtonRelease-3>", self.menu_cb)
 
     def init_layout(self):
@@ -66,7 +73,6 @@ class Monitor(Control):
         self.root.bind("<ButtonRelease-1>", self.stop_move_cb)
         self.root.bind("<B1-Motion>", self.motion_cb)
         self.add_menu_dt()
-        self.after_mntr = self.root.after_idle(self.io.start)
 
     def draw_pb(self, drawpb):
         if drawpb:
@@ -114,7 +120,7 @@ class Monitor(Control):
             ToolTip(self.close, msg='Exit', follow=True, delay=0)
             self.close.pack(side='right')
             if len(self.data) > 1:
-                self.expand = ttk.Button(self.f0, width=2, text='M', command=self.expand)
+                self.expand = ttk.Button(self.f0, width=2, text='M', command=self.expand_cb)
                 ToolTip(self.expand, msg='Min/Max', follow=True, delay=0)
                 self.expand.pack(side='right')
             #self.root.update_idletasks()
@@ -178,7 +184,8 @@ class Monitor(Control):
                 if v.t:
                     v.t.set('')
 
-    def expand(self):
+    def expand_cb(self):
+        print('expand_cb')
         with self.qo.mutex:
             self.qo.queue.clear()
         self.mode = self.mode + 1
@@ -200,21 +207,24 @@ class Monitor(Control):
                             v.w.pack(side='left', padx=3)
         self.update_height()
         self.root.update_idletasks()
-        self.mntr_io_start(lambda: self.io.start(self.mode))
+        if self.after_mntr:
+            self.root.after_cancel(self.after_mntr)
+        self.after_mntr = self.root.after_idle(lambda: self.io_start(self.mode))
+        #self.mntr_io_start(lambda: self.io.start(self.mode))
 
     def init_io(self):
-        del self.io[:]
+        self.io = MyAIO(self)
         for i in range(0, len(self.data)):
-            self.io.add(lambda i=i: self.mntr_cb1(i), self.mntr_cb2, self.mntr_cb3, self.cmdio_thread)
+            self.io.add(lambda i=i: self.mntr_cb1(i), self.mntr_cb2, lambda i=i: self.mntr_cb3(i))
 
     def mntr_io_start(self, io_start):
         if self.after_mntr:
             self.root.after_cancel(self.after_mntr)
         self.after_mntr = self.root.after_idle(lambda: io_start())
 
-    def mntr_cb1(self, p=0):
+    def mntr_cb1(self, index=0):
         self.read = True
-        if p > self.mode:
+        if index > self.mode:
             return False
         if hasattr(self, 'after_upd'):
             return False
@@ -225,35 +235,34 @@ class Monitor(Control):
             self.root.after_cancel(self.after_mntr)
             self.after_mntr = None
         if self.qo.qsize() == 0:
-            if p == None:
+            if index == None:
                 for i in range(0, len(self.mode) + 1):
                     self.data.select(i)
-                    self.data.do_cmds(self.qo, True)
+                    for obj in self.data.iter_cmds2():
+                        obj.srv = obj.dev[c_server]
+                        self.qo.put(obj)
             else:
-                self.data.select(p)
-                self.data.do_cmds(self.qo, True)
+                self.data.select(index)
+                for obj in self.data.iter_cmds2():
+                    obj.srv = obj.dev[c_server]
+                    self.qo.put(obj)
         if hasattr(self, 'pb'):
-            self.pb['maximum'] = self.qo.qsize()
             self.draw_pb(True)
         return True
 
-    def mntr_cb2(self):
-        line = self.qi.get_nowait()
-        #print(line)
-        self.ctrl_cb2(line)
-        if line.find('step') == 0:
+    def mntr_cb2(self, cmdid, val):
+        if val:
+            self.data.set_value(cmdid, val)
             return True
-        cmd, val = line.split(' ', 1)
-        if not val:
+        else:
             self.set_err_mode()
             return False
-        return True
 
-    def mntr_cb3(self, *args):
+    def mntr_cb3(self, index=0):
         if hasattr(self, 'pb'):
             self.draw_pb(False)
-        if self.io.cur >= self.mode:
-            self.after_mntr = self.root.after(int(self.dt.get())*1000, lambda: self.io.start(0))
+        if index >= self.mode:
+            self.after_mntr = self.root.after(int(self.dt.get())*1000, self.io_start)
             return False
         return True
 

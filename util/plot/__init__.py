@@ -7,10 +7,6 @@ from .plot import Plot
 from .plotdata import PlotData, get_cmdsx
 from .setup import Setup
 
-def plot_cb(mainwnd, *args):
-    dlg = Setup(parent=mainwnd)
-    dlg.do_modal()
-
 def plotfx_cb(mainwnd, *args):
     dlg = Setup(parent=mainwnd, mode='fx')
     dlg.do_modal()

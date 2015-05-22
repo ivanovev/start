@@ -1,7 +1,7 @@
 import threading
 
 from asyncio.futures import Future
-from asyncio import set_event_loop
+from asyncio import get_event_loop, set_event_loop
 from .guievents import GuiEventLoop
 
 class TkEventLoop(GuiEventLoop):

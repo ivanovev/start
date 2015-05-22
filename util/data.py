@@ -372,9 +372,10 @@ class Data(list):
                 cmd = ' '.join([cmd, val])
             if v.io_cb:
                 cmd = v.io_cb(dev, cmd)
-            c,a = cmd.split(' ', 1)
-            obj.cmd = c
-            obj.args = a.split()
+            cc = cmd.split(' ', 1)
+            obj.cmd = cc[0]
+            if len(cc) == 2:
+                obj.args = cc[1].split()
             if not cmd and v.l:
                 v.l.set(0)
             elif type(cmd) == str:

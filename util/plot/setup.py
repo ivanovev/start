@@ -9,7 +9,6 @@ from util.control import Control
 from util.server import proxy
 from util import CachedDict
 
-from .browse import Browse
 from .plotdata import PlotData, get_cmdsx
 
 import util
