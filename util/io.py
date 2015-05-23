@@ -104,6 +104,7 @@ class MyAIO(MyIO):
             index += 1
             if val and index < len(self):
                 self.wnd.root.after_idle(lambda: asyncio.async(self.start(index)))
+        self.wnd.pb['value'] = 0
         t2 = datetime.now()
         dt = t2 - t1
         dt = dt.seconds + float(dt.microseconds)/10e6

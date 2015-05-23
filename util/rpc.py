@@ -314,7 +314,7 @@ class Rpc(Control):
                         cmds[a].text = dflt
             f = self.init_frame(self.f13, cmds, cw0=0)
             for v in cmds.values():
-                w = v['w']
+                w = v.w
                 w.bind('<Return>', lambda evt: asyncio.async(self.io.start()))
             self.cd.get(lambda: cmds, srv, self.m, 'cmds')
             self.cd.get(lambda: f, srv, self.m, 'frame')

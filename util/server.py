@@ -8,7 +8,6 @@ from inspect import getargspec
 from socket import gethostbyaddr
 from types import FunctionType
 
-from .misc import app_srv, ping
 from .cache import CachedDict
 from .serial import query_serial, get_serials
 from .version import get_version
@@ -323,6 +322,21 @@ class MyHandler(SimpleXMLRPCRequestHandler):
         except:
             self.server.src_ip = self.address_string()
 
+def ping(ip, retries = -1):
+    ret = 0
+    if os.name == 'posix':
+        if retries == -1: retries = 1
+        ret = subprocess.call("fping -c1 -t500 %s" % ip, shell=True, stdout=open('/dev/null', 'w'), stderr=subprocess.STDOUT)
+    if os.name == 'nt':
+        if retries == -1: retries = 0
+        ret = subprocess.call("ping -n 1 -w 200 %s" % ip, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    ret = True if ret == 0 else False
+    if ret:
+        return ret
+    if retries > 0:
+        return ping(ip, retries - 1)
+    return ret
+
 class MyProxy:
     def __init__(self):
         self.cd = CachedDict()
@@ -483,24 +497,23 @@ class MyProxy:
         else:
             return start_process(*args)
 
-    def get_server(self, apps):
+    def get_server(self, extras):
         if hasattr(self, 'srv'):
             return self.srv
         else:
-            extras = app_srv(apps)
             self.srv = MyServer(('', self.port), extras)
             return self.srv
 
-    def start_server(self, apps):
+    def start_server(self, extras):
         print('server startup (port %d)' % self.port)
         try:
-            srv = self.get_server(apps)
+            srv = self.get_server(extras)
             srv.serve_forever()
         except:
             print('failed to start server at port', self.port)
 
-    def call_server(self, *args, apps=None):
-        srv = self.get_server(apps)
+    def call_server(self, *args, extras=None):
+        srv = self.get_server(extras)
         args = list(args)
         m = args.pop(0)
         ret = None

@@ -136,7 +136,7 @@ class Monitor(Control):
                     l.pack(side='left')
                 if w != None:
                     w.pack(side='left', padx=3)#, fill=tk.Y)
-                    v['w'] = w
+                    v.w = w
             else:
                 c = 2*(j % cn)
                 r = int(j / cn)
@@ -239,12 +239,10 @@ class Monitor(Control):
                 for i in range(0, len(self.mode) + 1):
                     self.data.select(i)
                     for obj in self.data.iter_cmds2():
-                        obj.srv = obj.dev[c_server]
                         self.qo.put(obj)
             else:
                 self.data.select(index)
                 for obj in self.data.iter_cmds2():
-                    obj.srv = obj.dev[c_server]
                     self.qo.put(obj)
         if hasattr(self, 'pb'):
             self.draw_pb(True)

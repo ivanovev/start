@@ -224,7 +224,6 @@ class Plot(Monitor):
             #print(k, self.x, v.dev)
             self.data.set_value(k, '%g' % self.x)
             for obj in self.data.iter_cmds2():
-                obj.srv = obj.dev[c_server]
                 self.qo.put(obj)
             dt = self.data.get_seconds('dt')
             self.qo.put(Obj(m='sleep', args=dt))
@@ -233,7 +232,6 @@ class Plot(Monitor):
             self.x = self.xlim[1]
         self.data.select('y')
         for obj in self.data.iter_cmds2():
-            obj.srv = obj.dev[c_server]
             self.qo.put(obj)
         return True
 

@@ -1,6 +1,7 @@
 
 from collections import OrderedDict as OD
 from types import FunctionType
+from .columns import c_server
 import pdb
 
 def find_from_table(t, x, val=True):
@@ -359,7 +360,8 @@ class Data(list):
             cmd = v.cmd if v.cmd else k
             val = None
             dev = self.get_dev(k)
-            obj = Obj(cmdid=k, dev=dev)
+            srv = dev[c_server] if c_server in dev else None
+            obj = Obj(cmdid=k, dev=dev, srv=srv)
             if not read:
                 val = self.get_value(k)
                 if val == '': continue

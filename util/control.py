@@ -2,15 +2,19 @@
 
 from collections import OrderedDict as OD
 
+import asyncio
 import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import messagebox
 
 from .tooltip import ToolTip
 from . import UI, IO
+from .io import MyAIO
 
 class Control(UI, IO):
     def __init__(self, data=None, dev=None, parent=None, title=None, pady=0, center=False):
+        self.aio = True
+        self.io_start = lambda *args: asyncio.async(self.io.start())
         IO.__init__(self)
         if parent == None:
             self.root = tk.Tk()
@@ -251,32 +255,24 @@ class Control(UI, IO):
 
     def read_cb(self, *args):
         self.read = True
-        self.io.start()
+        self.io_start()
 
     def write_cb(self, *args):
         self.read = False
-        self.io.start()
+        self.io_start()
 
     def init_io(self):
-        self.io.add(self.ctrl_cb1, self.ctrl_cb2, self.ctrl_cb3, self.cmdio_thread)
+        self.io = MyAIO(self)
+        self.io.add(self.ctrl_cb1, self.ctrl_cb2, self.ctrl_cb3)
 
-    def ctrl_cb1(self, do_cmds=True):
-        if do_cmds:
-            self.data.do_cmds(self.qo, self.read)
-        return self.tmp_cb1()
+    def ctrl_cb1(self):
+        print('cb1')
+        for obj in self.data.iter_cmds2(self.read):
+            self.qo.put(obj)
+        return True
 
-    def ctrl_cb2(self, line=''):
-        if not line:
-            line = self.qi.get_nowait()
-        if hasattr(self, 'pb'):
-            self.pb['value'] = self.pb['value'] + 1
-        if line.find('step') != -1:
-            return
-        cmdid, val = line.split(' ', 1)
-        if val and self.read:
-            self.data.set_value(cmdid, val)
-        else:
-            return False
+    def ctrl_cb2(self, cmdid, val):
+        self.data.set_value(cmdid, val)
         return True
 
     def ctrl_cb3(self):

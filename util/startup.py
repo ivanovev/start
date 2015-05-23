@@ -11,7 +11,7 @@ from .acl import Acl
 from .rpc import Rpc
 from .data import Data
 from .server import proxy
-from . import app_name, app_gui, iter_apps, get_default_filename
+from . import app_name, app_gui, app_srv, iter_apps, get_default_filename
 try:
     from .plot import Plot
 except:
@@ -102,14 +102,14 @@ def startup(*args):
     if 'call' in args.mode:
         n = sys.argv.index(mode)
         args = sys.argv[n+1:]
-        print('result:', proxy.call_server(*tuple(args), apps=apps))
+        print('result:', proxy.call_server(*tuple(args), extras=app_srv(apps)))
         return
     srvalive = proxy.alive()
     if 'srv' in args.mode:
         if not srvalive:
             os.environ['srvexec'] = '1'
             if len(args.mode) == 1:
-                proxy.start_server(apps)
+                proxy.start_server(app_srv(apps))
             else:
                 proxy.start_server_process()
         args.mode.pop(args.mode.index('srv'))

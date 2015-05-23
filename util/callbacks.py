@@ -1,6 +1,8 @@
 
 from .tooltip import ToolTip
 from .columns import *
+from .server import proxy
+from .misc import app_gui
 
 import tkinter as tk
 

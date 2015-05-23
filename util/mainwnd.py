@@ -7,7 +7,7 @@ import sys
 
 from collections import OrderedDict as OD
 
-from . import CachedDict, Data, app_name, app_gui, app_tools, app_devdata
+from . import CachedDict, Data, app_name, app_gui, app_tools, app_alldevdata
 from .control import Control
 from .columns import *
 from .server import proxy
@@ -39,7 +39,7 @@ class Mainwnd(tk.Tk, UI):
         Mainwnd.mw = self
         self.apps = apps
         self.name = app_name(apps)
-        self.devdata = app_devdata(apps)
+        self.devdata = app_alldevdata(apps)
         self.columns = get_columns()
         for p in self.devdata:
             for k in p.keys():
@@ -210,7 +210,7 @@ class Mainwnd(tk.Tk, UI):
         self.tree_update_item(self.tree, itemid, dev)
 
     def dev_dlg(self, cat, dev=None):
-        devdata = app_devdata(self.apps, cat)
+        devdata = app_alldevdata(self.apps, cat)
         data = Data(name=cat, cmds=devdata.cmds)
         dlg = Control(data=data, parent=self, title=('Edit' if dev else 'Add') + ' ' + cat, pady=5)
         if dev:

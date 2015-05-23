@@ -2,7 +2,7 @@
 from collections import OrderedDict as OD
 from .info import Info
 from .version import get_version
-from .misc import app_name, app_devdata
+from .misc import app_name, app_alldevdata
 from .server import proxy
 from .columns import *
 
@@ -17,7 +17,7 @@ class About(Info):
         self.tree_add_lvl0(self.tree, ['Sources', 'https://github.com/ivanovev/start.git'])
         self.tree_add_lvl0(self.tree, ['Binaries', 'ftp://85.141.12.78/pub/start/%s/' % app_name(self.apps)])
         total = 0
-        devdata = app_devdata(self.apps)
+        devdata = app_alldevdata(self.apps)
         for p in devdata:
             devtypes = p[c_type].value
             t1 = len(devtypes)
