@@ -1,14 +1,12 @@
 
-import queue
+import asyncio, queue
 from collections import OrderedDict as OD
-from datetime import datetime, timedelta
+from datetime import datetime
 from time import sleep
-from threading import Thread
-from .server import proxy
-import pdb
 
-import asyncio
-from .asyncio_tkinter import async
+@asyncio.coroutine
+def async(it, *args):
+    return (yield from asyncio.get_event_loop().run_in_executor(None, it, *args))
 
 def time_dec(f):
     def tmp(*args, **kwargs):
@@ -65,46 +63,53 @@ class MyIO(list):
             self.wnd.root.config(cursor='')
             self.cur = 0
 
-class MyAIO(MyIO):
-    def __init__(self, wnd, *args):
-        MyIO.__init__(self, wnd, *args)
+class MyAIO(list):
+    def __init__(self, wnd=None):
+        self.qi = queue.Queue()
+        self.qo = queue.Queue()
+        self.wnd = wnd
+        self.na = []
 
-    def add(self, cb1, cb2=lambda *args: False, cb3=lambda: False):
-        self.append((cb1, cb2, cb3))
+    def add(self, cb1, cb2, cb3, io_cb):
+        self.append((cb1, cb2, cb3, io_cb))
 
     @asyncio.coroutine
     def start(self, index=0):
         t1 = datetime.now()
-        cb1, cb2, cb3 = self[index]
+        self.na = []
+        cb1, cb2, cb3, io_cb = self[index]
         val = cb1()
         if val:
-            self.wnd.root.config(cursor='watch')
-            #self.wnd.set_cursor('watch')
-            if hasattr(self.wnd, 'pb'):
-                self.wnd.pb['maximum'] = self.wnd.qo.qsize()
-                self.wnd.pb['value'] = 0
+            if self.wnd:
+                self.wnd.root.config(cursor='watch')
+                #self.wnd.set_cursor('watch')
+                if hasattr(self.wnd, 'pb'):
+                    self.wnd.pb['maximum'] = self.qo.qsize()
+                    self.wnd.pb['value'] = 0
             while True:
                 try:
-                    obj = self.wnd.qo.get(True, .1)
+                    obj = self.qo.get(True, .1)
                 except queue.Empty:
                     break
-                if obj.m == 'sleep':
-                    yield from async(sleep, float(obj.args))
-                    continue
-                args = obj.args if obj.args else []
-                val = yield from async(proxy.call_method2, obj.srv, obj.cmd, *args)
-                if hasattr(self.wnd, 'pb'):
-                    self.wnd.pb['value'] = self.wnd.pb['value'] + 1
-                self.ioval[obj.cmdid] = val
-                if not cb2(obj.cmdid, val):
+                #args = obj.args if obj.args else []
+                #val = yield from async(proxy.call_method2, obj.srv, obj.cmd, *args)
+                val = yield from async(io_cb, obj)
+                if self.wnd:
+                    if hasattr(self.wnd, 'pb'):
+                        self.wnd.pb['value'] = self.wnd.pb['value'] + 1
+                if not cb2(obj, val):
                     break
-            self.wnd.root.config(cursor='')
-            #self.wnd.set_cursor('')
+            if self.wnd:
+                self.wnd.root.config(cursor='')
+                #self.wnd.set_cursor('')
             val = cb3()
             index += 1
-            if val and index < len(self):
-                self.wnd.root.after_idle(lambda: asyncio.async(self.start(index)))
-        self.wnd.pb['value'] = 0
+            if self.wnd:
+                if val and index < len(self):
+                    self.wnd.root.after_idle(lambda: asyncio.async(self.start(index)))
+        if self.wnd:
+            if hasattr(self.wnd, 'pb'):
+                self.wnd.pb['value'] = 0
         t2 = datetime.now()
         dt = t2 - t1
         dt = dt.seconds + float(dt.microseconds)/10e6
@@ -116,6 +121,7 @@ class IO:
         self.qo = queue.Queue()
         self.io = MyIO(self)
 
+    '''
     def cmdio_thread(self):
         while True:
             try:
@@ -182,4 +188,5 @@ class IO:
     def cmdio(self, *args, **kwargs):
         self.tmp_cb1(*args, read=False)
         self.io.start(do_cb1=False, **kwargs)
+    '''
 

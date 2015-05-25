@@ -9,7 +9,8 @@ from tkinter import messagebox
 
 from .tooltip import ToolTip
 from . import UI, IO
-from .io import MyAIO
+from .myio import MyAIO
+from .server import proxy
 
 class Control(UI, IO):
     def __init__(self, data=None, dev=None, parent=None, title=None, pady=0, center=False):
@@ -263,16 +264,16 @@ class Control(UI, IO):
 
     def init_io(self):
         self.io = MyAIO(self)
-        self.io.add(self.ctrl_cb1, self.ctrl_cb2, self.ctrl_cb3)
+        self.io.add(self.ctrl_cb1, self.ctrl_cb2, self.ctrl_cb3, proxy.io_cb)
 
     def ctrl_cb1(self):
         print('cb1')
         for obj in self.data.iter_cmds2(self.read):
-            self.qo.put(obj)
+            self.io.qo.put(obj)
         return True
 
-    def ctrl_cb2(self, cmdid, val):
-        self.data.set_value(cmdid, val)
+    def ctrl_cb2(self, obj, val):
+        self.data.set_value(obj.cmdid, val)
         return True
 
     def ctrl_cb3(self):

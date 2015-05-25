@@ -5,7 +5,7 @@ from .control import Control
 from .cache import CachedDict
 from .server import proxy, MyServer
 from .columns import *
-from .io import MyAIO
+from .myio import MyAIO
 from .data import Obj
 
 import asyncio
@@ -170,11 +170,11 @@ class Rpc(Control):
 
     def init_io(self):
         self.io = MyAIO(self)
-        self.io.add(self.rpc_cb1, self.rpc_cb2)
+        self.io.add(self.rpc_cb1, self.rpc_cb2, lambda: False, proxy.io_cb)
         self.io_listupd = MyAIO(self)
-        self.io_listupd.add(self.listupd_cb1, self.listupd_cb2, self.listupd_cb3)
+        self.io_listupd.add(self.listupd_cb1, self.listupd_cb2, self.listupd_cb3, proxy.io_cb)
         self.io_argsupd = MyAIO(self)
-        self.io_argsupd.add(self.argsupd_cb1, self.argsupd_cb2, self.argsupd_cb3)
+        self.io_argsupd.add(self.argsupd_cb1, self.argsupd_cb2, self.argsupd_cb3, proxy.io_cb)
 
     def get_args(self):
         srv = self.data.get_value('srv')
@@ -191,10 +191,10 @@ class Rpc(Control):
         if not m:
             m = self.get_method()
         args = self.get_args()
-        self.qo.put(Obj(srv=srv, cmd=m, args=args, cmdid='tmp'))
+        self.io.qo.put(Obj(srv=srv, cmd=m, args=args, cmdid='tmp'))
         return True
 
-    def rpc_cb2(self, cmdid, val):
+    def rpc_cb2(self, obj, val):
         s = val
         m = self.get_method()
         srv = self.data.get_value('srv')
@@ -229,15 +229,16 @@ class Rpc(Control):
         if hasattr(self, 'mm'):
             delattr(self, 'mm')
         mm = proxy.get_methods_cached(srv)
+        obj = Obj(srv=srv, cmd='system.listMethods', cmdid='tmp')
         self.lb.delete(0, tk.END)
         if not mm:
             self.filter_setup(['*'], '*')
-            self.qo.put(Obj(srv=srv, cmd='system.listMethods', cmdid='tmp'))
+            self.io_listupd.qo.put(obj)
             return True
-        self.listupd_cb2('tmp', mm)
+        self.listupd_cb2(obj, mm)
         self.listupd_cb3()
 
-    def listupd_cb2(self, cmdid, val):
+    def listupd_cb2(self, obj, val):
         if type(val) == list:
             self.mm = val
         elif type(val) == str:
@@ -283,15 +284,15 @@ class Rpc(Control):
         self.m = m
         argspec = proxy.cd.find(srv, m, self.cdkey)
         if not argspec:
-            self.qo.put(Obj(srv=srv, cmd=self.cdkeym, args=[m], cmdid=self.m))
+            self.io_argsupd.qo.put(Obj(srv=srv, cmd=self.cdkeym, args=[m], cmdid=self.m))
             return True
         self.argsupd_cb3()
         return False
 
-    def argsupd_cb2(self, cmdid, val):
+    def argsupd_cb2(self, obj, val):
         srv = self.data.get_value('srv')
-        obj = MyServer.unhexlify(val)
-        proxy.cd.get(lambda: obj, srv, cmdid, self.cdkey)
+        argspec = MyServer.unhexlify(val)
+        proxy.cd.get(lambda: argspec, srv, obj.cmdid, self.cdkey)
         return False
 
     def argsupd_cb3(self):

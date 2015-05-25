@@ -16,8 +16,9 @@ import tkinter.ttk as ttk
 
 from ..control import Control
 from ..monitor import Monitor
-from ..io import MyAIO
 from ..columns import c_server
+from ..server import proxy
+from ..myio import MyAIO
 from ..data import Obj
 
 from .plotdata import PlotData
@@ -174,7 +175,7 @@ class Plot(Monitor):
 
     def init_io(self):
         self.io = MyAIO(self)
-        self.io.add(self.plot_cb1, self.plot_cb2, self.plot_cb3)
+        self.io.add(self.plot_cb1, self.plot_cb2, self.plot_cb3, proxy.io_cb)
 
     def next_prev_x(self, nextx=True):
         step = float(self.data.get_value('step'))
@@ -224,21 +225,21 @@ class Plot(Monitor):
             #print(k, self.x, v.dev)
             self.data.set_value(k, '%g' % self.x)
             for obj in self.data.iter_cmds2():
-                self.qo.put(obj)
+                self.io.qo.put(obj)
             dt = self.data.get_seconds('dt')
-            self.qo.put(Obj(m='sleep', args=dt))
+            self.io.qo.put(Obj(m='sleep', args=dt))
         elif self.mode == 'ft':
             self.xlim = self.get_xlim()
             self.x = self.xlim[1]
         self.data.select('y')
         for obj in self.data.iter_cmds2():
-            self.qo.put(obj)
+            self.io.qo.put(obj)
         return True
 
-    def plot_cb2(self, cmdid, val):
+    def plot_cb2(self, obj, val):
         if self.stop:
             return False
-        self.data.set_value(cmdid, val, iter_next=False)
+        self.data.set_value(obj.cmdid, val, iter_next=False)
         return True
 
     def plot_cb3(self, io_start_after_idle=True):

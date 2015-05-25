@@ -9,7 +9,8 @@ from math import ceil
 from .control import Control
 from .tooltip import ToolTip
 from .columns import c_server
-from .io import MyAIO
+from .server import proxy
+from .myio import MyAIO
 
 import asyncio
 import sys, pdb
@@ -186,8 +187,8 @@ class Monitor(Control):
 
     def expand_cb(self):
         print('expand_cb')
-        with self.qo.mutex:
-            self.qo.queue.clear()
+        with self.io.qo.mutex:
+            self.io.qo.queue.clear()
         self.mode = self.mode + 1
         if self.mode >= len(self.data):
             self.mode = 0
@@ -215,7 +216,7 @@ class Monitor(Control):
     def init_io(self):
         self.io = MyAIO(self)
         for i in range(0, len(self.data)):
-            self.io.add(lambda i=i: self.mntr_cb1(i), self.mntr_cb2, lambda i=i: self.mntr_cb3(i))
+            self.io.add(lambda i=i: self.mntr_cb1(i), self.mntr_cb2, lambda i=i: self.mntr_cb3(i), proxy.io_cb)
 
     def mntr_io_start(self, io_start):
         if self.after_mntr:
@@ -229,28 +230,28 @@ class Monitor(Control):
         if hasattr(self, 'after_upd'):
             return False
         self.root.update_idletasks()
-        with self.qo.mutex:
-            self.qo.queue.clear()
+        with self.io.qo.mutex:
+            self.io.qo.queue.clear()
         if self.after_mntr:
             self.root.after_cancel(self.after_mntr)
             self.after_mntr = None
-        if self.qo.qsize() == 0:
+        if self.io.qo.qsize() == 0:
             if index == None:
                 for i in range(0, len(self.mode) + 1):
                     self.data.select(i)
                     for obj in self.data.iter_cmds2():
-                        self.qo.put(obj)
+                        self.io.qo.put(obj)
             else:
                 self.data.select(index)
                 for obj in self.data.iter_cmds2():
-                    self.qo.put(obj)
+                    self.io.qo.put(obj)
         if hasattr(self, 'pb'):
             self.draw_pb(True)
         return True
 
-    def mntr_cb2(self, cmdid, val):
+    def mntr_cb2(self, obj, val):
         if val:
-            self.data.set_value(cmdid, val)
+            self.data.set_value(obj.cmdid, val)
             return True
         else:
             self.set_err_mode()

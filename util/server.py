@@ -391,6 +391,12 @@ class MyProxy:
                 except:
                     pass
             
+    def io_cb(self, obj):
+        args = obj.args if obj.args else []
+        if obj.m == 'sleep' and len(args) == 1:
+            time.sleep(args[0])
+            return
+        return proxy.call_method2(obj.srv, obj.cmd, *args)
 
     def find_method(self, m, lst):
         if lst == None:

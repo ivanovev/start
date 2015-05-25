@@ -7,7 +7,7 @@ from collections import OrderedDict as OD
 import pdb
 import asyncio
 
-from util.asyncio_tkinter import TkEventLoop, async
+from util.asyncio_tkinter import TkEventLoop
 
 def sel_dec(f):
     def tmp(*args, **kwargs):
