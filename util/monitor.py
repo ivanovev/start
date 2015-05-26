@@ -224,7 +224,7 @@ class Monitor(Control):
         self.after_mntr = self.root.after_idle(lambda: io_start())
 
     def mntr_cb1(self, index=0):
-        self.read = True
+        self.io.read = True
         if index > self.mode:
             return False
         if hasattr(self, 'after_upd'):

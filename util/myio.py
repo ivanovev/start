@@ -69,6 +69,7 @@ class MyAIO(list):
         self.qo = queue.Queue()
         self.wnd = wnd
         self.na = []
+        self.read = True
 
     def add(self, cb1, cb2, cb3, io_cb):
         self.append((cb1, cb2, cb3, io_cb))

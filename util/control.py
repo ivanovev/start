@@ -23,7 +23,6 @@ class Control(UI, IO):
             self.root = tk.Toplevel(parent)
             self.parent = parent
         self.root.withdraw()
-        self.read = True
         self.pady = pady
         if data != None:
             self.data = data
@@ -255,11 +254,11 @@ class Control(UI, IO):
         self.add_button(self.fb, 'Read', self.read_cb)
 
     def read_cb(self, *args):
-        self.read = True
+        self.io.read = True
         self.io_start()
 
     def write_cb(self, *args):
-        self.read = False
+        self.io.read = False
         self.io_start()
 
     def init_io(self):
@@ -268,7 +267,7 @@ class Control(UI, IO):
 
     def ctrl_cb1(self):
         print('cb1')
-        for obj in self.data.iter_cmds2(self.read):
+        for obj in self.data.iter_cmds2(self.io.read):
             self.io.qo.put(obj)
         return True
 

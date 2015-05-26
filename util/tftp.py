@@ -27,6 +27,8 @@ class Tftp(MyAIO):
         self.remotefname = remotefname
         self.read = read
         self.timeout = 0.5
+        self.add(self.tftp_cb1, self.tftp_cb2, self.tftp_cb3, self.io_cb)
+        self.data_cb = self.file_cb
 
     def create_socket(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -60,11 +62,18 @@ class Tftp(MyAIO):
     def tftp_cb1(self):
         self.ackn = 0
         self.s = self.create_socket()
+        self.qo.queue.clear()
+        print(self.read)
         if self.read:
             pkt = self.make_rq_pkt(TFTP_RRQ, self.remotefname)
+            self.qo.put(pkt)
         else:
             pkt = self.make_rq_pkt(TFTP_WRQ, self.remotefname)
-        self.qo.put(pkt)
+            self.qo.put(pkt)
+            data = self.data_cb()
+            for i in range(0, int(len(data)/SEG_SZ1) + 1):
+                pkt = b''.join([pack('>HH', TFTP_DATA, i), data[i*SEG_SZ1:(i+1)*SEG_SZ1]])
+                self.qo.put(pkt)
         return True
 
     def tftp_cb2(self, obj, val):
@@ -79,12 +88,15 @@ class Tftp(MyAIO):
                     return True
             return False
         else:
+            print(val)
+            '''
             ret = self.data_cb()
             if ret:
                 pkt = b''.join([pack('>H', TFTP_DATA), ret])
                 self.qo.put(pkt)
                 return True
-            return False
+            '''
+            return True
 
     def tftp_cb3(self):
         self.s.close()
@@ -118,10 +130,7 @@ def main():
     import asyncio
     f = Tftp('192.168.0.1', 69, 'script.pcl', False)
     f.localfname = '/tmp/test.pcl'
-    f.data_cb = f.file_cb
-    f.add(f.tftp_cb1, f.tftp_cb2, f.tftp_cb3, f.io_cb)
     r = asyncio.get_event_loop().run_until_complete(f.start())
-    print(r)
 
 if __name__ == "__main__":
     main()
