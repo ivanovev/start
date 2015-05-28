@@ -18,16 +18,15 @@ import sys, pdb
 class Monitor(Control):
     def __init__(self, data=None, dev=None):
         self.aio = True
-        self.io_start = lambda *args, index=0: asyncio.async(self.io.start(index))
+        self.io_start = lambda *args, **kwargs: asyncio.async(self.io.start(*args, **kwargs))
         Control.__init__(self, data=data, dev=dev)
-        self.root.bind('<<mainloop>>', self.io_start)
-        #self.after_mntr = self.root.after_idle(self.io.start)
+        self.root.bind('<<mainloop>>', lambda *args: self.io_start())
 
     def add_menu_dt(self):
         self.dt = tk.StringVar(value=15)
         self.menu = tk.Menu(self.root, tearoff=0)
         for i in [1, 2, 3, 5, 10, 15, 30, 60, 120]:
-            self.menu.add_radiobutton(label='%ds'%i, variable=self.dt, value='%d'%i, command=self.io_start)
+            self.menu.add_radiobutton(label='%ds'%i, variable=self.dt, value='%d'%i, command=lambda *args: self.io_start())
         self.root.bind("<ButtonRelease-3>", self.menu_cb)
 
     def init_layout(self):
@@ -210,18 +209,12 @@ class Monitor(Control):
         self.root.update_idletasks()
         if self.after_mntr:
             self.root.after_cancel(self.after_mntr)
-        self.after_mntr = self.root.after_idle(lambda: self.io_start(self.mode))
-        #self.mntr_io_start(lambda: self.io.start(self.mode))
+        self.after_mntr = self.root.after_idle(lambda: self.io_start(index=self.mode))
 
     def init_io(self):
         self.io = MyAIO(self)
         for i in range(0, len(self.data)):
             self.io.add(lambda i=i: self.mntr_cb1(i), self.mntr_cb2, lambda i=i: self.mntr_cb3(i), proxy.io_cb)
-
-    def mntr_io_start(self, io_start):
-        if self.after_mntr:
-            self.root.after_cancel(self.after_mntr)
-        self.after_mntr = self.root.after_idle(lambda: io_start())
 
     def mntr_cb1(self, index=0):
         self.io.read = True

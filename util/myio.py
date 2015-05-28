@@ -75,15 +75,13 @@ class MyAIO(list):
         self.append((cb1, cb2, cb3, io_cb))
 
     @asyncio.coroutine
-    def start(self, index=0):
+    def start(self, index=0, do_cb1=True):
         t1 = datetime.now()
         self.na = []
         cb1, cb2, cb3, io_cb = self[index]
-        val = cb1()
-        if val:
+        if cb1() if do_cb1 else True:
             if self.wnd:
-                self.wnd.root.config(cursor='watch')
-                #self.wnd.set_cursor('watch')
+                self.wnd.set_cursor('watch')
                 if hasattr(self.wnd, 'pb'):
                     self.wnd.pb['maximum'] = self.qo.qsize()
                     self.wnd.pb['value'] = 0
@@ -92,8 +90,6 @@ class MyAIO(list):
                     obj = self.qo.get(True, .1)
                 except queue.Empty:
                     break
-                #args = obj.args if obj.args else []
-                #val = yield from async(proxy.call_method2, obj.srv, obj.cmd, *args)
                 val = yield from async(io_cb, obj)
                 if self.wnd:
                     if hasattr(self.wnd, 'pb'):
@@ -101,8 +97,7 @@ class MyAIO(list):
                 if not cb2(obj, val):
                     break
             if self.wnd:
-                self.wnd.root.config(cursor='')
-                #self.wnd.set_cursor('')
+                self.wnd.set_cursor('')
             val = cb3()
             index += 1
             if self.wnd:
@@ -115,79 +110,4 @@ class MyAIO(list):
         dt = t2 - t1
         dt = dt.seconds + float(dt.microseconds)/10e6
         print('duration: %.3f' % dt)
-
-class IO:
-    def __init__(self):
-        self.qi = queue.Queue()
-        self.qo = queue.Queue()
-        self.io = MyIO(self)
-
-    '''
-    def cmdio_thread(self):
-        while True:
-            try:
-                cmd = self.qo.get(True, .3)
-            except queue.Empty:
-                break
-            #print(cmd)
-            if cmd.find('sleep') != -1:
-                dt = float(cmd.split(' ')[-1])
-                sleep(dt)
-                self.qi.put('step')
-                continue
-            cmdid,cmd = cmd.split(' ', 1)
-            dev = self.data.get_dev(cmdid)
-            k = '.'.join([dev['name'], dev['type']])
-            if k in self.io.na:
-                continue
-            val = proxy.call(dev, cmd)
-            if not val:
-                self.io.na.append(k)
-                val = ''
-            s = '%s %s' % (cmdid, val)
-            self.qi.put(s)
-
-    def update_wnd(self):
-        if not self.io.t.is_alive() and self.qi.qsize() == 0 and self.qo.qsize() == 0:
-            if hasattr(self, 'after_upd'):
-                delattr(self, 'after_upd')
-            self.io.nextio()
-            return
-        try:
-            while 1:
-                if not self.io.cb2():
-                    break
-        except queue.Empty:
-            pass
-        self.after_upd = self.root.after(200, self.update_wnd)
-
-    def tmp_cb1(self, *args, read=None, key='tmp'):
-        if read != None:
-            self.read = read
-        self.io.ioval.clear()
-        if key:
-            for c in args:
-                self.qo.put(key + ' ' + c)
-        if self.qo.qsize() > 0:
-            if hasattr(self, 'pb'):
-                self.pb['maximum'] = self.qo.qsize()
-        else:
-            return False
-        return True
-
-    def tmp_cb2(self):
-        line = self.qi.get_nowait()
-        ll = line.split(' ', 1)
-        if ll[-1]:
-            self.io.ioval[ll[0]] = ll[-1]
-        if hasattr(self, 'pb'):
-            self.pb['value'] = self.pb['value'] + 1
-
-    def tmp_cb3(self):
-        return len(self.io.ioval) > 0
-
-    def cmdio(self, *args, **kwargs):
-        self.tmp_cb1(*args, read=False)
-        self.io.start(do_cb1=False, **kwargs)
-    '''
 

@@ -8,15 +8,15 @@ import tkinter.ttk as ttk
 from tkinter import messagebox
 
 from .tooltip import ToolTip
-from . import UI, IO
-from .myio import MyAIO
+from .columns import c_server
+from .data import Obj
+from . import MyUI, MyAIO
 from .server import proxy
 
-class Control(UI, IO):
+class Control(MyUI):
     def __init__(self, data=None, dev=None, parent=None, title=None, pady=0, center=False):
         self.aio = True
-        self.io_start = lambda *args: asyncio.async(self.io.start())
-        IO.__init__(self)
+        self.io_start = lambda *args, **kwargs: asyncio.async(self.io.start(*args, **kwargs))
         if parent == None:
             self.root = tk.Tk()
         else:
@@ -266,7 +266,6 @@ class Control(UI, IO):
         self.io.add(self.ctrl_cb1, self.ctrl_cb2, self.ctrl_cb3, proxy.io_cb)
 
     def ctrl_cb1(self):
-        print('cb1')
         for obj in self.data.iter_cmds2(self.io.read):
             self.io.qo.put(obj)
         return True
@@ -281,4 +280,12 @@ class Control(UI, IO):
             messagebox.showerror(title='Error', message='Device is not available (%s)' % na, master=self.root)
             return False
         return True
+
+    def cmdio(self, cmd):
+        if getattr(self, 'data', False):
+            if getattr(self.data, 'dev', False):
+                dev = self.data.dev
+                obj = Obj(cmdid='tmp', cmd=cmd, srv=dev[c_server])
+                self.io.qo.put(obj)
+                self.io_start(do_cb1=False)
 

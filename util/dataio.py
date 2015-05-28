@@ -7,7 +7,6 @@ from collections import OrderedDict as OD
 from threading import Thread
 from .control import Control
 from .data import Data
-from .server import proxy
 from .socketio import recv_data, send_data
 from .callbacks import telnet_io_cb
 from .columns import *

@@ -225,6 +225,7 @@ class Plot(Monitor):
             #print(k, self.x, v.dev)
             self.data.set_value(k, '%g' % self.x)
             for obj in self.data.iter_cmds2():
+                obj.args = ['%g' % x]
                 self.io.qo.put(obj)
             dt = self.data.get_seconds('dt')
             self.io.qo.put(Obj(m='sleep', args=dt))
@@ -352,4 +353,7 @@ class Plot(Monitor):
         for i in self.savefig:
             self.fig.savefig(i)
         sys.exit(0)
+
+    def set_cursor(self, cursor):
+        self.root.config(cursor=cursor)
 

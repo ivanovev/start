@@ -258,7 +258,7 @@ class Data(list):
     def set_value(self, k, s, set_send=True, skip_trace_cb=False, iter_next=True):
         if k == 'tmp':
             return
-        if s == '':
+        if not k or not s:
             return
         v = self.find_v(k)
         if not v:
@@ -287,18 +287,9 @@ class Data(list):
         if iter_next:
             k = self.next_k(k)
             if k:
-                self.set_value(k, s_orig)
-        '''
-        kk = list(self.cmds.keys())
-        if k not in kk:
-            return
-        if kk.index(k) == len(self.cmds) - 1:
-            return
-        k = kk[kk.index(k) + 1]
-        v = self.cmds[k]
-        if not v.send and v.fmt_cb:
-            self.set_value(k, s_orig)
-        '''
+                v = self.find_v(k)
+                if not v.send and v.fmt_cb:
+                    self.set_value(k, s_orig)
 
     def get_dev(self, k):
         v = self.find_v(k)

@@ -11,7 +11,7 @@ from . import CachedDict, Data, app_name, app_gui, app_tools, app_alldevdata
 from .control import Control
 from .columns import *
 from .server import proxy
-from .ui import UI
+from .myui import MyUI
 
 import pdb
 
@@ -31,7 +31,7 @@ def watch_dec(f):
         return ret
     return tmp
 
-class Mainwnd(tk.Tk, UI):
+class Mainwnd(tk.Tk, MyUI):
     def __init__(self, apps, filename=None):
         tk.Tk.__init__(self)
         self.root = self
@@ -49,7 +49,7 @@ class Mainwnd(tk.Tk, UI):
 
         self.init_layout()
 
-        UI.__init__(self, 'json', filename)
+        MyUI.__init__(self, 'json', filename)
         self.center()
 
     def init_layout(self):

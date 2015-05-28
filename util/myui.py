@@ -26,7 +26,7 @@ def sel_dec(f):
         return ret
     return tmp
 
-class UI:
+class MyUI:
     def __init__(self, fileext='txt', filename=None):
         self.fileext = fileext
         if filename:

@@ -1,6 +1,6 @@
 
-from .ui import *
 from .myio import *
+from .myui import *
 from .data import *
 from .misc import *
 from .cache import *
