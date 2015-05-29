@@ -20,10 +20,6 @@ SEG_SZ      = SEG_SZ1 + 4
 
 class Tftp(MyAIO):
     def __init__(self, ip_addr, port, st, remotefname='script.pcl', read=True, wnd=None):
-        if read and not st.writable():
-            raise io.UnsupportedOperation
-        if not read and not st.readable():
-            raise io.UnsupportedOperation
         MyAIO.__init__(self)
         self.mode = 'octet'.encode('ascii')
         self.ip_addr = ip_addr
@@ -49,6 +45,12 @@ class Tftp(MyAIO):
         return s
 
     def tftp_cb1(self):
+        if not self.st:
+            return False
+        if self.read and not self.st.writable():
+            raise io.UnsupportedOperation
+        if not self.read and not self.st.readable():
+            raise io.UnsupportedOperation
         self.ackn = 0
         self.s = self.create_socket()
         self.qo.queue.clear()

@@ -1,11 +1,11 @@
 
-import os, types
+import asyncio, os, types
+import binascii, hashlib
 import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import filedialog
 from collections import OrderedDict as OD
 import pdb
-import asyncio
 
 from util.asyncio_tkinter import TkEventLoop
 
@@ -363,4 +363,84 @@ class MyUI:
                     w.config(cursor=cursor)
         if not save:
             delattr(self, 'cursors')
+
+    def update_fsz_crc32_md5(self, fname=None):
+        try:
+            fsz = 0
+            if fname:
+                fsz = os.path.getsize(fname)
+            data = self.get_data()
+            if not fsz:
+                fsz = len(data)
+            if data:
+                if type(data) == str:
+                    data = data.encode('ascii')
+                if 'md5' in self.data:
+                    m = hashlib.md5()
+                    m.update(data)
+                    self.data.set_value('md5', m.hexdigest())
+                if 'crc32' in self.data:
+                    crc = binascii.crc32(data)
+                    self.data.set_value('crc32', '0x%08X' % crc)
+                self.data.set_value('fsz', '%d' % fsz)
+                self.data.set_value('fszhex', '0x%.6X' % fsz)
+                return True
+        except:
+            return False
+
+    def add_tx_cmds(self, data, txcrc32=True, txmd5=False):
+        data.add_page('TX')
+        data.add('ip_addr', label='IP address', wdgt='entry', text=data.dev['ip_addr'])
+        data.add('browse', label='File path', wdgt='button', text='Browse', click_cb=self.fileopen_cb)
+        data.add('fname', wdgt='entry', columnspan=2)
+        data.add('fsz', label='File size', wdgt='entry', state='readonly')
+        data.add('fszhex', label='File size (hex)', wdgt='entry', state='readonly')
+        if txmd5:
+            data.add('md5label', label='MD5 sum')
+            data.add('md5', wdgt='entry', state='readonly', columnspan=2)
+        if txcrc32:
+            data.add('crc32label', label='CRC32 sum')
+            data.add('crc32', wdgt='entry', state='readonly', columnspan=2)
+        data.add('send', wdgt='button', text='Write', click_cb=self.write_cb)
+
+    def add_rx_cmds(self, data):
+        data.add_page('RX')
+        data.add('ip_addr', label='IP address', wdgt='entry', text=data.dev['ip_addr'])
+        data.add('browse', label='File', wdgt='button', text='Browse', click_cb=self.filesaveas_cb)
+        data.add('fname', wdgt='entry', columnspan=2)
+        data.add('fsz', label='File size', wdgt='entry', msg='1-1024k, 1-32M', text='1')
+        data.add('fszunits', wdgt='combo', state='readonly', value=['k', 'M'], text='M')
+        data.add('recv', wdgt='button', text='Read', click_cb=self.read_cb)
+
+    def fileopen(self, fname):
+        self.data.set_value('fname', fname)
+        return self.update_fsz_md5(fname)
+
+    def filesave(self, fname):
+        self.data.set_value('fname', fname)
+
+    def read_file(self, fname=None):
+        f = open(fname, self.filemode)
+        data = f.read()
+        f.close()
+        return data
+
+    def get_data(self):
+        fname = self.data.get_value('fname')
+        if fname:
+            return self.read_file(fname)
+
+    def add_frame(self):
+        self.frame = ttk.Frame(self.root)
+        self.frame.pack(fill=tk.BOTH, expand=1, side=tk.TOP)
+
+    def add_fb(self):
+        if not hasattr(self, 'fb'):
+            self.fb = tk.Frame(self.root)
+            self.fb.pack(fill=tk.X, expand=0, side=tk.BOTTOM)
+
+    def init_menu(self):
+        if hasattr(self, 'data'):
+            if hasattr(self.data, 'menu'):
+                self.add_menus(self.data.menu)
 

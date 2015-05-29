@@ -18,7 +18,8 @@ import sys, pdb
 class Monitor(Control):
     def __init__(self, data=None, dev=None):
         self.aio = True
-        self.io_start = lambda *args, **kwargs: asyncio.async(self.io.start(*args, **kwargs))
+        if hasattr(self, 'io'):
+            self.io_start = lambda *args, **kwargs: asyncio.async(self.io.start(*args, **kwargs))
         Control.__init__(self, data=data, dev=dev)
         self.root.bind('<<mainloop>>', lambda *args: self.io_start())
 

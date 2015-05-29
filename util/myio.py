@@ -76,6 +76,7 @@ class MyAIO(list):
 
     @asyncio.coroutine
     def start(self, index=0, do_cb1=True):
+        print('start')
         t1 = datetime.now()
         self.na = []
         cb1, cb2, cb3, io_cb = self[index]

@@ -16,7 +16,8 @@ from .server import proxy
 class Control(MyUI):
     def __init__(self, data=None, dev=None, parent=None, title=None, pady=0, center=False):
         self.aio = True
-        self.io_start = lambda *args, **kwargs: asyncio.async(self.io.start(*args, **kwargs))
+        if hasattr(self, 'io'):
+            self.io_start = lambda *args, **kwargs: asyncio.async(self.io.start(*args, **kwargs))
         if parent == None:
             self.root = tk.Tk()
         else:
@@ -44,15 +45,6 @@ class Control(MyUI):
         self.root.title(self.name)
         if center:
             self.center()
-
-    def add_frame(self):
-        self.frame = ttk.Frame(self.root)
-        self.frame.pack(fill=tk.BOTH, expand=1, side=tk.TOP)
-
-    def add_fb(self):
-        if not hasattr(self, 'fb'):
-            self.fb = tk.Frame(self.root)
-            self.fb.pack(fill=tk.X, expand=0, side=tk.BOTTOM)
 
     def button_cb(self, k):
         btns = self.data.buttons
@@ -205,11 +197,6 @@ class Control(MyUI):
         f1 = self.init_frame(self.tabs, cmds, rowconfigure=rowconfigure)
         self.tabs.add(f1, text=cmds.name, sticky=tk.NSEW)
         cmds.tabid = self.tabs.tabs()[-1]
-
-    def init_menu(self):
-        if hasattr(self, 'data'):
-            if hasattr(self.data, 'menu'):
-                self.add_menus(self.data.menu)
 
     def init_layout(self):
         if len(self.data) == 1:
