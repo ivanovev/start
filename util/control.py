@@ -52,11 +52,12 @@ class Control(MyUI):
         cmd(self)
 
     def rbutton_cb(self, k):
-        cmds = self.data.cmds
-        v1 = '0' if int(cmds[k].l.get()) else '1'
-        for k,v in cmds.items():
-            if v.l:
-                v.l.set(v1)
+        v = self.data.find_v(k, True)
+        if v.l if v else False:
+            v1 = '0' if int(v.l.get()) else '1'
+            for k,v in self.data.cmds.items():
+                if v.l:
+                    v.l.set(v1)
 
     def key_to_name(self, k):
         k = k.replace('.', '_')

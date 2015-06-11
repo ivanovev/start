@@ -216,11 +216,13 @@ class Data(list):
             return
         setattr(v, a, val)
 
-    def find_v(self, k):
+    def find_v(self, k, cmdsupd=False):
         if k in self.cmds:
             return self.cmds[k]
         for p in self:
             if k in p:
+                if cmdsupd:
+                    self.cmds = p
                 return p[k]
         if hasattr(self, k):
             return getattr(self, k)
