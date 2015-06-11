@@ -1,0 +1,32 @@
+[submodule "hm"]
+	path = hm
+	url = git@github.com:ivanovev/hm.git
+	branch = master
+[submodule "misc"]
+	path = misc
+	url = git@github.com:ivanovev/misc.git
+	branch = master
+[submodule "ctl"]
+	path = ctl
+	url = git@github.com:ivanovev/ctl.git
+	branch = master
+[submodule "fio"]
+	path = fio
+	url = git@github.com:ivanovev/fio.git
+	branch = master
+[submodule "br"]
+	path = br
+	url = git@github.com:ivanovev/br.git
+	branch = master
+[submodule "alt"]
+	path = alt
+	url = git@github.com:ivanovev/alt.git
+	branch = master
+[submodule "sg"]
+	path = sg
+	url = git@github.com:ivanovev/sg.git
+	branch = master
+[submodule "test"]
+	path = test
+	url = git@github.com:ivanovev/test.git
+	branch = master
