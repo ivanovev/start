@@ -364,7 +364,7 @@ class MyUI:
         if not save:
             delattr(self, 'cursors')
 
-    def update_fsz_crc32_md5(self, fname=None):
+    def update_fsz_crc32(self, fname=None):
         try:
             fsz = 0
             if fname:
@@ -375,32 +375,27 @@ class MyUI:
             if data:
                 if type(data) == str:
                     data = data.encode('ascii')
-                if 'md5' in self.data:
-                    m = hashlib.md5()
-                    m.update(data)
-                    self.data.set_value('md5', m.hexdigest())
                 if 'crc32' in self.data:
                     crc = binascii.crc32(data)
                     self.data.set_value('crc32', '0x%08X' % crc)
                 self.data.set_value('fsz', '%d' % fsz)
-                self.data.set_value('fszhex', '0x%.6X' % fsz)
+                if fsz > 0xFFFF:
+                    self.data.set_value('fszhex', '0x%06X' % fsz)
+                else:
+                    self.data.set_value('fszhex', '0x%04X' % fsz)
                 return True
         except:
             return False
 
-    def add_tx_cmds(self, data, txcrc32=True, txmd5=False):
+    def add_tx_cmds(self, data, txcrc32=True):
         data.add_page('TX')
         data.add('ip_addr', label='IP address', wdgt='entry', text=data.dev['ip_addr'])
         data.add('browse', label='File path', wdgt='button', text='Browse', click_cb=self.fileopen_cb)
         data.add('fname', wdgt='entry', columnspan=2)
         data.add('fsz', label='File size', wdgt='entry', state='readonly')
         data.add('fszhex', label='File size (hex)', wdgt='entry', state='readonly')
-        if txmd5:
-            data.add('md5label', label='MD5 sum')
-            data.add('md5', wdgt='entry', state='readonly', columnspan=2)
         if txcrc32:
-            data.add('crc32label', label='CRC32 sum')
-            data.add('crc32', wdgt='entry', state='readonly', columnspan=2)
+            data.add('crc32', label='CRC32 sum', wdgt='entry', state='readonly')
         data.add('send', wdgt='button', text='Write', click_cb=self.write_cb)
 
     def add_rx_cmds(self, data):
@@ -414,7 +409,7 @@ class MyUI:
 
     def fileopen(self, fname):
         self.data.set_value('fname', fname)
-        return self.update_fsz_md5(fname)
+        return self.update_fsz_crc32(fname)
 
     def filesave(self, fname):
         self.data.set_value('fname', fname)

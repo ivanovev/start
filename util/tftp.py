@@ -79,13 +79,20 @@ class Tftp(MyAIO):
                     self.ackn += 1
                     self.qo.put(pkt)
                     return True
-            return False
+            else:
+                self.na.append(self.ip_addr)
+                return False
         else:
-            return True
+            if val:
+                return True
+            else:
+                self.na.append(self.ip_addr)
+                return False
 
     def tftp_cb3(self):
         self.s.close()
         self.st.close()
+        self.wnd.ctrl_cb3()
 
     def io_cb(self, obj):
         self.s.send(obj)

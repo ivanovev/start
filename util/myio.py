@@ -77,38 +77,39 @@ class MyAIO(list):
     @asyncio.coroutine
     def start(self, index=0, do_cb1=True):
         print('start')
-        t1 = datetime.now()
         self.na = []
         cb1, cb2, cb3, io_cb = self[index]
-        if cb1() if do_cb1 else True:
-            if self.wnd:
-                self.wnd.set_cursor('watch')
-                if hasattr(self.wnd, 'pb'):
-                    self.wnd.pb['maximum'] = self.qo.qsize()
-                    self.wnd.pb['value'] = 0
-            while True:
-                try:
-                    obj = self.qo.get(True, .1)
-                except queue.Empty:
-                    break
-                val = yield from async(io_cb, obj)
-                if self.wnd:
-                    if hasattr(self.wnd, 'pb'):
-                        self.wnd.pb['value'] = self.wnd.pb['value'] + 1
-                if not cb2(obj, val):
-                    break
-            if self.wnd:
-                self.wnd.set_cursor('')
-            val = cb3()
-            index += 1
-            if self.wnd:
-                if val and index < len(self):
-                    self.wnd.root.after_idle(lambda: asyncio.async(self.start(index)))
+        if not cb1() if do_cb1 else False:
+            return
+        t1 = datetime.now()
         if self.wnd:
+            self.wnd.set_cursor('watch')
             if hasattr(self.wnd, 'pb'):
+                self.wnd.pb['maximum'] = self.qo.qsize()
                 self.wnd.pb['value'] = 0
+        while True:
+            try:
+                obj = self.qo.get(True, .1)
+            except queue.Empty:
+                break
+            val = yield from async(io_cb, obj)
+            if self.wnd:
+                if hasattr(self.wnd, 'pb'):
+                    self.wnd.pb['value'] = self.wnd.pb['value'] + 1
+            if not cb2(obj, val):
+                break
+        if self.wnd:
+            self.wnd.set_cursor('')
         t2 = datetime.now()
         dt = t2 - t1
         dt = dt.seconds + float(dt.microseconds)/10e6
         print('duration: %.3f' % dt)
+        val = cb3()
+        index += 1
+        if self.wnd:
+            if val and index < len(self):
+                self.wnd.root.after_idle(lambda: asyncio.async(self.start(index)))
+        if self.wnd:
+            if hasattr(self.wnd, 'pb'):
+                self.wnd.pb['value'] = 0
 
