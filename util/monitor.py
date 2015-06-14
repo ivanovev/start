@@ -21,6 +21,7 @@ class Monitor(Control):
         if hasattr(self, 'io'):
             self.io_start = lambda *args, **kwargs: asyncio.async(self.io.start(*args, **kwargs))
         Control.__init__(self, data=data, dev=dev)
+        self.io_start = lambda *args, **kwargs: asyncio.async(self.io.start(*args, **kwargs))
         self.root.bind('<<mainloop>>', lambda *args: self.io_start())
 
     def add_menu_dt(self):

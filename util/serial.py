@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import os, serial, sys, pdb
+import os, sys, pdb
+try:
+    import serial
+except:
+    print('pyserial not installed')
+    serial = None
+    pass
 
 def to_bytes(s):
     if s and type(s) == str:
@@ -40,6 +46,8 @@ def query_serial(port='COM1', bps='9600', nbits='8', parity='N', stopb='1', s=''
     @param rts - 1 или 0 или пустая строка
     @return строка из устройства или пустая строка
     """
+    if not serial:
+        return ''
     print_dbg(s)
     print_dbg(endstr)
     try:

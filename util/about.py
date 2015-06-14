@@ -15,7 +15,7 @@ class About(Info):
         self.tree_add_lvl0(self.tree, ['Version', get_version()])
         self.tree_add_lvl0(self.tree, ['Local server', proxy.get_local_srv()])
         self.tree_add_lvl0(self.tree, ['Sources', 'https://github.com/ivanovev/start.git'])
-        self.tree_add_lvl0(self.tree, ['Binaries', 'ftp://85.141.12.78/pub/start/%s/' % app_name(self.apps)])
+        #self.tree_add_lvl0(self.tree, ['Binaries', 'ftp://85.141.12.78/pub/start/%s/' % app_name(self.apps)])
         total = 0
         devdata = app_alldevdata(self.apps)
         for p in devdata:

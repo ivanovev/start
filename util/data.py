@@ -238,8 +238,8 @@ class Data(list):
             return kk[kk.index(k) + 1]
         n = self.index(self.cmds) + 1
         if n < len(self):
-            self.select(n)
-            kk = list(self.cmds.keys())
+            cmds = self[n]
+            kk = list(cmds.keys())
             return kk[0]
 
     def trace_cb(self, k, v):
