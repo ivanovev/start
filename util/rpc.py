@@ -22,7 +22,6 @@ class Rpc(Control):
         self.cdkeym = 'system.methodSignature'
         self.center()
         self.lastsrv = None
-        self.aio = True
         self.root.bind('<<mainloop>>', self.listupd_cb)
 
     def init_layout(self):

@@ -328,7 +328,7 @@ class MyUI:
                 yield j
 
     def mainloop(self):
-        if getattr(self, 'aio', False):
+        if hasattr(self, 'io'):
             TkEventLoop(self.root).mainloop()
         else:
             self.root.mainloop()

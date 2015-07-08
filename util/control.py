@@ -14,10 +14,8 @@ from . import MyUI, MyAIO
 from .server import proxy
 
 class Control(MyUI):
-    def __init__(self, data=None, dev=None, parent=None, title=None, pady=0, center=False):
+    def __init__(self, data=None, dev=None, parent=None, title=None, pady=1, center=False):
         self.aio = True
-        if hasattr(self, 'io'):
-            self.io_start = lambda *args, **kwargs: asyncio.async(self.io.start(*args, **kwargs))
         if parent == None:
             self.root = tk.Tk()
         else:
@@ -35,6 +33,8 @@ class Control(MyUI):
         self.init_layout()
         self.init_menu()
         self.init_io()
+        if hasattr(self, 'io'):
+            self.io_start = lambda *args, **kwargs: asyncio.async(self.io.start(*args, **kwargs))
         if dev:
             t1 = '%s.%s' % (dev['name'], dev['type'])
             self.name = '%s %s' % (title, t1) if title else t1
@@ -259,7 +259,8 @@ class Control(MyUI):
         return True
 
     def ctrl_cb2(self, obj, val):
-        self.data.set_value(obj.cmdid, val)
+        if getattr(self.io, 'read', False):
+            self.data.set_value(obj.cmdid, val)
         return True
 
     def ctrl_cb3(self):

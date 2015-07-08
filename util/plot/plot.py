@@ -37,7 +37,6 @@ class Plot(Monitor):
         self.root.title('Plot f(x)' if mode == 'fx' else 'Plot f(t)')
         self.fileext = 'csv'
         self.stop = False
-        self.aio = True
         self.io_start = lambda *args: asyncio.async(self.io.start())
         self.root.bind('<<mainloop>>', self.io_start)
 
