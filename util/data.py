@@ -301,43 +301,6 @@ class Data(list):
         if hasattr(self, 'dev'):
             return self.dev
 
-    def iter_cmds(self, read=True):
-        cmds = self.cmds
-        if not read:
-            for k,v in cmds.items():
-                if not v.send and v.fmt_cb:
-                    val = self.get_value(k)
-                    v.fmt_cb(val, read)
-        for k,v in cmds.items():
-            if not v.send:
-                continue
-            if v.l.get() != '1' if v.l else False:
-                continue
-            cmd = v.cmd if v.cmd else k
-            val = None
-            dev = self.get_dev(k)
-            if not read:
-                val = self.get_value(k)
-                if val == '': continue
-                if v.fmt_cb:
-                    val = v.fmt_cb(val, read)
-                if type(val) == int: val = str(val)
-            if v.cmd_cb:
-                cmd = v.cmd_cb(dev, cmd, val)
-            elif val != None:
-                cmd = ' '.join([cmd, val])
-            if v.io_cb:
-                cmd = v.io_cb(dev, cmd)
-            cmd = ' '.join([k, cmd])
-            if not cmd and v.l:
-                v.l.set(0)
-            elif type(cmd) == str:
-                yield cmd
-
-    def do_cmds(self, qo, read=True):
-        for cmd in self.iter_cmds(read):
-            qo.put(cmd)
-
     def iter_cmds2(self, read=True):
         cmds = self.cmds
         if not read:
@@ -361,6 +324,8 @@ class Data(list):
                 if v.fmt_cb:
                     val = v.fmt_cb(val, read)
                 if type(val) == int: val = str(val)
+                if not val:
+                    continue
             if v.cmd_cb:
                 cmd = v.cmd_cb(dev, cmd, val)
             elif val != None:

@@ -364,6 +364,9 @@ class MyUI:
         if not save:
             delattr(self, 'cursors')
 
+    def visible(self):
+        return self.root.state() != 'withdrawn'
+
     def update_fsz_crc32(self, fname=None):
         try:
             fsz = 0

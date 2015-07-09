@@ -90,7 +90,7 @@ def query_serial(port='COM1', bps='9600', nbits='8', parity='N', stopb='1', s=''
             elif type(s) == bytes:
                 res += ch
             if endstr:
-                if res.find(endstr, 2) != -1:
+                if res.find(endstr, 1) != -1:
                     break
             if readlen:
                 if len(res) == readlen:
@@ -108,10 +108,10 @@ def get_serials():
     """
     Функция возвращает список последовательных портов, одной строкой, через пробел
     пример для windows: COM1 COM2 COM3 ...
-    для GNU/*nix: ttyS* ttyMI* ttyUSB*
+    для GNU/*nix: ttyS* ttyMI* ttyUSB*, ttyACM*
     """
     res = []
-    for i in ['/dev/ttyS', '/dev/ttyMI', '/dev/ttyUSB', '/dev/ttyr', 'COM']:
+    for i in ['/dev/ttyS', '/dev/ttyMI', '/dev/ttyUSB', '/dev/ttyACM', '/dev/ttyr', 'COM']:
         j = 0
         while True:
             try:

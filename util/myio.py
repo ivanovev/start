@@ -46,7 +46,7 @@ class MyAIO(list):
         if not cb1() if do_cb1 else False:
             return
         t1 = datetime.now()
-        if self.wnd:
+        if self.wnd.visible() if self.wnd else False:
             self.wnd.set_cursor('watch')
             if hasattr(self.wnd, 'pb'):
                 self.wnd.pb['maximum'] = self.qo.qsize()
@@ -62,12 +62,12 @@ class MyAIO(list):
             val = yield from async(io_cb, obj)
             if not val and ip_addr:
                 self.na.append(ip_addr)
-            if self.wnd:
+            if self.wnd.visible() if self.wnd else False:
                 if hasattr(self.wnd, 'pb'):
                     self.wnd.pb['value'] = self.wnd.pb['value'] + 1
             if not cb2(obj, val):
                 break
-        if self.wnd:
+        if self.wnd.visible() if self.wnd else False:
             self.wnd.set_cursor('')
         t2 = datetime.now()
         dt = t2 - t1
@@ -75,10 +75,10 @@ class MyAIO(list):
         print('duration: %.3f' % dt)
         val = cb3()
         index += 1
-        if self.wnd:
+        if self.wnd.visible() if self.wnd else False:
             if val and index < len(self):
                 self.wnd.root.after_idle(lambda: asyncio.async(self.start(index)))
-        if self.wnd:
+        if self.wnd.visible() if self.wnd else False:
             if hasattr(self.wnd, 'pb'):
                 self.wnd.pb['value'] = 0
 

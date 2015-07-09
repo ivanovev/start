@@ -20,6 +20,7 @@ class Monitor(Control):
         Control.__init__(self, data=data, dev=dev)
         #self.io_start = lambda *args, **kwargs: asyncio.async(self.io.start(*args, **kwargs))
         self.root.bind('<<mainloop>>', lambda *args: self.io_start())
+        self.stop = False
 
     def add_menu_dt(self):
         self.dt = tk.StringVar(value=15)
@@ -115,7 +116,7 @@ class Monitor(Control):
         f1 = ttk.Frame(parent)
         cn = cmds.columns if hasattr(cmds, 'columns') else 2 
         if n == 0:
-            self.close = ttk.Button(self.f0, width=2, text='X', command=self.root.destroy)
+            self.close = ttk.Button(self.f0, width=2, text='X', command=self.exit_cb)
             ToolTip(self.close, msg='Exit', follow=True, delay=0)
             self.close.pack(side='right')
             if len(self.data) > 1:
@@ -177,7 +178,7 @@ class Monitor(Control):
         self.root.geometry("+%s+%s" % (x, y))
 
     def set_err_mode(self, *args):
-        self.io.cur += len(self.data)
+        #self.io.cur += len(self.data)
         for p in self.data:
             for k,v in p.items():
                 if v.t:
@@ -216,6 +217,8 @@ class Monitor(Control):
             self.io.add(lambda i=i: self.mntr_cb1(i), self.mntr_cb2, lambda i=i: self.mntr_cb3(i), proxy.io_cb)
 
     def mntr_cb1(self, index=0):
+        if self.stop:
+            return False
         self.io.read = True
         if index > self.mode:
             return False
@@ -242,6 +245,8 @@ class Monitor(Control):
         return True
 
     def mntr_cb2(self, obj, val):
+        if self.stop:
+            return False
         if val:
             self.data.set_value(obj.cmdid, val)
             return True
@@ -250,10 +255,20 @@ class Monitor(Control):
             return False
 
     def mntr_cb3(self, index=0):
+        if self.stop:
+            return False
         if hasattr(self, 'pb'):
             self.draw_pb(False)
         if index >= self.mode:
             self.after_mntr = self.root.after(int(self.dt.get())*1000, self.io_start)
             return False
         return True
+
+    def exit_cb(self, *args):
+        self.stop = True
+        self.root.withdraw()
+        if getattr(self, 'after_mntr', False):
+            self.root.after_cancel(self.after_mntr)
+            self.after_mntr = None
+        self.root.after(1000, self.root.quit)
 
