@@ -23,6 +23,8 @@ class Rpc(Control):
         self.center()
         self.lastsrv = None
         self.root.bind('<<mainloop>>', self.listupd_cb)
+        self.data.add_page('rpc')
+        self.data.add('rpc', value='0')
 
     def init_layout(self):
         self.pady=5
@@ -190,7 +192,7 @@ class Rpc(Control):
         if not m:
             m = self.get_method()
         args = self.get_args()
-        self.io.qo.put(Obj(srv=srv, cmd=m, args=args, cmdid='tmp'))
+        self.io.qo.put(Obj(srv=srv, cmd=m, args=args, cmdid='rpc'))
         return True
 
     def rpc_cb2(self, obj, val):

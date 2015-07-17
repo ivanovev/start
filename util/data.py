@@ -100,7 +100,7 @@ class Data(list):
                 v.send = cmds.send
             elif hasattr(self, 'send'):
                 v.send = self.send
-        if hasattr(self, 'io_cb'):
+        if hasattr(self, 'io_cb') and not v.io_cb:
             v.io_cb = self.io_cb
         cmds[k] = v
         return v
@@ -271,7 +271,7 @@ class Data(list):
             return
         s_orig = s
         if v.fmt_cb:
-            s = v.fmt_cb(s, read=True)
+            s = v.fmt_cb(s, True)
         if v.value and v.wdgt != 'spin':
             kv = v.value
             if type(kv) in [dict, OD]:
