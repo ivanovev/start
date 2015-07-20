@@ -399,7 +399,7 @@ class MyProxy:
             elif type(args) in [list]:
                 time.sleep(float(args[0]))
             return
-        return proxy.call_method2(obj.srv, obj.cmd, *obj.args)
+        return proxy.call_method2(obj.srv, obj.cmd, *args)
 
     def find_method(self, m, lst):
         if lst == None:
