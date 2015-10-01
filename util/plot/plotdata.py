@@ -19,6 +19,8 @@ def get_cmdsx(mode):
         data.add('spanunits', wdgt='combo', value=['s', 'm', 'h'], state='readonly', text='m')
     data.add('dt', wdgt='entry', label='Time delta', text='1')
     data.add('dtunits', wdgt='combo', value=['ms', 's', 'm', 'h'], state='readonly', text='s')
+    if mode == 'ft':
+        data.add('cont', label='Continuous mode', wdgt='combo', value=['ON', 'OFF'], text='ON', state='readonly')
     return data
 
 class PlotData(Data):

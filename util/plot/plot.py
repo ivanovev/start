@@ -62,6 +62,7 @@ class Plot(Monitor):
         for i in ['span', 'dt']:
             data.set_value(i, self.data.get_value(i))
             data.set_value('%sunits' % i, self.data.get_value('%sunits' % i))
+        data.set_value('cont', self.data.get_value('cont'))
         dlg = Control(data=data, parent=self.root, title='Edit time span', pady=5)
         dlg.add_buttons_ok_cancel()
         dlg.do_modal()
@@ -70,6 +71,7 @@ class Plot(Monitor):
         for i in ['span', 'dt']:
             self.data.set_value(i, dlg.kw[i])
             self.data.set_value('%sunits' % i, dlg.kw['%sunits' % i])
+        self.data.set_value('cont', dlg.kw['cont'])
         self.update_formatter()
 
     def update_formatter(self):
@@ -250,6 +252,7 @@ class Plot(Monitor):
         kk = list(cmds.keys())
         fig = self.fig
         xlim = self.xlim
+        xx0 = xlim[0]
         pause = int(self.pause.get())
         for k,v in cmds.items():
             if not v.send:
@@ -265,7 +268,11 @@ class Plot(Monitor):
                 v['xx'].append([])
                 v['yy'].append([])
             if val != '':
-                yy.append(float(val))
+                try:
+                    val = float(val)
+                except:
+                    val = 0
+                yy.append(val)
                 xx.append(x)
             x0 = v['xx'][0]
             y0 = v['yy'][0]
@@ -279,6 +286,11 @@ class Plot(Monitor):
                 v['yy'].pop(0)
         self.redraw_all()
         if self.mode == 'ft':
+            cont = (self.data.get_value('cont') != 'OFF')
+            if not cont:
+                if xx0 < xlim[0]:
+                    print('Continuous mode is OFF, stop now')
+                    return False
             dt = self.data.get_milliseconds('dt')
             self.plot_upd = self.root.after(dt, self.io_start)
             return False
@@ -330,16 +342,19 @@ class Plot(Monitor):
         self.fig.canvas.draw()
 
     def filesave(self, fname):
-        if self.mode == 'fx':
-            f = open(fname, 'w')
-            cmds = self.data['y']
-            vv = [v for v in cmds.values()]
-            xx = list(chain(*vv[0]['xx']))
-            yy = [list(chain(*v['yy'])) for v in vv]
-            for i in range(0, len(xx)):
-                yyi = [k[i] for k in yy]
-                f.write(','.join(['%.5f' % j for j in [xx[i]] + yyi]) + '\n')
-            f.close()
+        f = open(fname, 'w')
+        cmds = self.data['y']
+        vv = [v for v in cmds.values()]
+        xx = list(chain(*vv[0]['xx']))
+        if self.mode == 'ft':
+            xx0 = pylab.num2date(xx[0])
+            xx1 = [(pylab.num2date(x) - xx0).total_seconds() for x in xx]
+            xx = xx1
+        yy = [list(chain(*v['yy'])) for v in vv]
+        for i in range(0, len(xx)):
+            yyi = [k[i] for k in yy]
+            f.write(','.join(['%.5f' % j for j in [xx[i]] + yyi]) + '\n')
+        f.close()
 
     def parse_savefig(self, args):
         parser = ArgumentParser()

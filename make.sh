@@ -8,7 +8,7 @@ fi
 path=`pwd`
 name=`basename $path`
 out="/tmp/${name}.tgz"
-smb="/mnt/smb3"
+smb="/mnt/smb4"
 allsubmodules="hm misc ctl fio br alt sg test tmb"
 urlhttps="https://github.com/ivanovev/"
 urlssh="git@github.com:ivanovev/"
