@@ -176,6 +176,8 @@ class MyUI:
         w1.grid(column=column, row=row, sticky=tk.NSEW)
         f1.columnconfigure(column, weight=1)
         f1.rowconfigure(row, weight=1)
+        scrx = None
+        scry = None
 
         if horiz:
             scrx = tk.Scrollbar(f1, orient=tk.HORIZONTAL, command=w1.xview)
@@ -188,6 +190,8 @@ class MyUI:
             w1.config(yscrollcommand=scry.set)
             scry.grid(column=column+1, row=row, sticky=tk.N+tk.S)
             f1.columnconfigure(column+1, weight=0)
+
+        return scrx, scry
 
     def text_append(self, w, l, newline=False, clear=False, color=None, see=True):
         state = w.cget('state')

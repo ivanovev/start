@@ -67,13 +67,13 @@ class MyAIO(list):
                     self.wnd.pb['value'] = self.wnd.pb['value'] + 1
             if not cb2(obj, val):
                 break
+        val = cb3()
         if self.wnd.visible() if self.wnd else False:
             self.wnd.set_cursor('')
         t2 = datetime.now()
         dt = t2 - t1
         dt = dt.seconds + float(dt.microseconds)/10e6
         print('duration: %.3f' % dt)
-        val = cb3()
         index += 1
         if self.wnd.visible() if self.wnd else False:
             if val and index < len(self):
