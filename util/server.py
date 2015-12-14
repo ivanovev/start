@@ -87,9 +87,10 @@ class MyServer(SimpleXMLRPCServer):
             if self.verbose:
                 print('Method lookup error (%s)' % method)
             return ''
-        if self.idle and method in extras:
-            self.verbose_msg(method, params, '0 (idle)')
-            return '0'
+        if self.idle:
+            if method in extras or method.find('util') == 0:
+                self.verbose_msg(method, params, '0 (idle)')
+                return '0'
         func = self.funcs[method]
         outdev = OutDevice()
         if not hasattr(func, 'stdout'):
