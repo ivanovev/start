@@ -7,7 +7,8 @@ fi
 
 path=`pwd`
 name=`basename $path`
-out="/tmp/${name}.tgz"
+tgz_file="/tmp/${name}.tgz"
+deb_file="/tmp/${name}.deb"
 smb="/mnt/smb4"
 allsubmodules="hm misc ctl fio br alt sg test tmb nio8"
 urlhttps="https://github.com/ivanovev/"
@@ -25,7 +26,7 @@ update_version()
 
 tgz()
 {
-    tar --exclude-vcs --exclude=*.swp -cvzf $out .
+    tar --exclude-vcs --exclude=*.swp -cvzf $tgz_file .
 }
 
 clean()
@@ -37,9 +38,9 @@ clean()
 try2copy()
 {
     n=`mount | grep $smb | wc -l`
-    bout=`basename $out`
+    btgz=`basename $tgz_file`
     if (($n == 1)); then
-        cp $out $smb/start/$bout
+        cp $tgz_file $smb/start/$btgz
     fi
 }
 
@@ -126,6 +127,32 @@ submodule()
     esac
 }
 
+deb()
+{
+    echo "make deb"
+    ver=`date +%Y%m%d`
+    deb_dir="/tmp/hm_$ver"
+    rm -rf $deb_dir
+    mkdir $deb_dir
+    mkdir $deb_dir/usr
+    mkdir $deb_dir/usr/bin
+    mkdir $deb_dir/usr/share
+    mkdir $deb_dir/usr/share/python3
+    mkdir $deb_dir/usr/share/doc
+    mkdir $deb_dir/usr/share/doc/starthm
+    mkdir $deb_dir/DEBIAN
+    cp startall.py $deb_dir/usr/bin/starthm
+    echo '...' > $deb_dir/usr/share/doc/starthm/copyright
+    echo '...' > $deb_dir/usr/share/doc/starthm/changelog.Debian
+    chmod -R 755 $deb_dir/usr
+    chmod -R 644 $deb_dir/usr/share/doc/starthm/copyright
+    chmod -R 644 $deb_dir/usr/share/doc/starthm/changelog.Debian
+    gzip -9 $deb_dir/usr/share/doc/starthm/changelog.Debian
+    cat control | sed "s/^Version: [^^]*$/Version: $ver/" > $deb_dir/DEBIAN/control
+    #cp control $deb_dir/DEBIAN/control
+    fakeroot dpkg-deb --build $deb_dir
+}
+
 case $1 in
 'ver')  update_version
         ;;
@@ -136,6 +163,9 @@ case $1 in
         echo '*' > acl.txt
         tgz
         try2copy
+        ;;
+'deb') clean
+        deb
         ;;
 'commit') clean
         update_version
