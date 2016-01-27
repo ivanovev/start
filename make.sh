@@ -136,19 +136,32 @@ deb()
     mkdir $deb_dir
     mkdir $deb_dir/usr
     mkdir $deb_dir/usr/bin
+    mkdir $deb_dir/usr/lib
+    mkdir $deb_dir/usr/lib/python3
+    mkdir $deb_dir/usr/lib/python3/dist-packages
+    mkdir $deb_dir/usr/lib/python3/dist-packages/starthm
     mkdir $deb_dir/usr/share
-    mkdir $deb_dir/usr/share/python3
     mkdir $deb_dir/usr/share/doc
     mkdir $deb_dir/usr/share/doc/starthm
+    mkdir $deb_dir/usr/share/applications
     mkdir $deb_dir/DEBIAN
-    cp startall.py $deb_dir/usr/bin/starthm
+    cp hm/starthm.py $deb_dir/usr/bin/starthm
     echo '...' > $deb_dir/usr/share/doc/starthm/copyright
     echo '...' > $deb_dir/usr/share/doc/starthm/changelog.Debian
     chmod -R 755 $deb_dir/usr
     chmod -R 644 $deb_dir/usr/share/doc/starthm/copyright
     chmod -R 644 $deb_dir/usr/share/doc/starthm/changelog.Debian
+    cp -r hm $deb_dir/usr/lib/python3/dist-packages/starthm
+    cp -r util $deb_dir/usr/lib/python3/dist-packages/starthm
     gzip -9 $deb_dir/usr/share/doc/starthm/changelog.Debian
     cat control | sed "s/^Version: [^^]*$/Version: $ver/" > $deb_dir/DEBIAN/control
+    cat hm/starthm.desktop | sed "s/^Version=[^^]*$/Version=$ver/" > $deb_dir/usr/share/applications/starthm.desktop
+    chmod 644 $deb_dir/usr/share/applications/starthm.desktop
+    rm -rf $deb_dir/usr/lib/python3/dist-packages/starthm/hm/.git
+    rm -rf $deb_dir/usr/lib/python3/dist-packages/starthm/hm/LICENSE
+    rm -rf $deb_dir/usr/lib/python3/dist-packages/starthm/hm/starthm.py
+    rm -rf $deb_dir/usr/lib/python3/dist-packages/starthm/hm/starthm.desktop
+    rm -rf $deb_dir/usr/lib/python3/dist-packages/starthm/util/.git
     #cp control $deb_dir/DEBIAN/control
     fakeroot dpkg-deb --build $deb_dir
 }
