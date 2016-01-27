@@ -32,6 +32,7 @@ def ping(ip, retries = -1):
 def app_name(apps):
     if hasattr(__main__, '__file__'):
         name = __main__.__file__
+        name = name.split('/')[-1]
         name = name.replace('start', '')
         name = name.replace('.py', '')
         return name
