@@ -7,6 +7,7 @@ except:
     from myio import MyAIO
 finally:
     pass
+from util import ping
 import pdb
 
 TFTP_RRQ    = 1
@@ -51,6 +52,9 @@ class Tftp(MyAIO):
             raise io.UnsupportedOperation
         if not self.read and not self.st.readable():
             raise io.UnsupportedOperation
+        if not ping(self.ip_addr):
+            print('failed to ping %s' % self.ip_addr)
+            return False
         self.ackn = 0
         self.s = self.create_socket()
         self.qo.queue.clear()

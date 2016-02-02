@@ -49,6 +49,7 @@ class MyServer(SimpleXMLRPCServer):
         self.idle = False
         self.verbose = True
         self.backends = set()
+        self.register_function(self.ping, 'srv.ping')
         self.register_function(self.alive, 'srv.alive')
         self.register_function(self.echo1, 'srv.echo')
         self.register_function(self.idle1, 'srv.idle')
@@ -314,6 +315,14 @@ class MyServer(SimpleXMLRPCServer):
         Запустить дочерний процесс с аргументами %pa%
         """
         return start_process(pa, *args, echo=self.echo)
+
+    def ping(self, ipaddr, retries='2'):
+        """
+        ping
+        """
+        retries = int(retries)
+        ret = 'alive' if ping(ipaddr, retries) else 'N/A'
+        return ret
 
 class MyHandler(SimpleXMLRPCRequestHandler):
     def setup(self):

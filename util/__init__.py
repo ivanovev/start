@@ -3,7 +3,6 @@ from .myio import *
 from .myui import *
 from .data import *
 from .misc import *
-from .tftp import *
 from .cache import *
 from .server import *
 from .columns import *
