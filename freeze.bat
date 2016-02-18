@@ -14,7 +14,7 @@ rem %s7z% x "%srctgz%" -ofreeze
 rem cd freeze
 rem %s7z% x "%srctar%"
 
-set all=hm br fio all
+set all=hm br fio tmb all
 set /p id="%all%: " %=%
 if not "%id%" == "all" (
 	set all=%id%
