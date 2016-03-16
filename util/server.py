@@ -15,6 +15,18 @@ from .version import get_version
 import binascii, pickle
 import os, subprocess, sys, time, urllib, pdb
 
+'''
+if os.name == 'nt':
+    import socket
+    # httplib boost 
+    realsocket=socket.socket 
+    def socketwrap(family=socket.AF_INET, type=socket.SOCK_STREAM, proto=0): 
+       sockobj=realsocket(family, type, proto) 
+       sockobj.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1) 
+       return sockobj 
+    socket.socket=socketwrap 
+'''
+
 acl_fname = 'acl.txt'
 
 def start_process(pa, *args, echo=False):
@@ -100,7 +112,7 @@ class MyServer(SimpleXMLRPCServer):
         try:
             result = func(*params)
             if result == None:
-                print('result = None')
+                print(' '.join([str(self.src_ip), str(method), str(params)]), ': result = None')
                 result = ''
         except:
             print('Failed to call %s' % method, sys.exc_info())
