@@ -1,14 +1,8 @@
 
 import io, select, socket, time
 from struct import pack
-try:
-    from .myio import MyAIO
-except:
-    from myio import MyAIO
-finally:
-    pass
-from util import ping
-import pdb
+from .myio import MyAIO
+from .server import ping
 
 TFTP_RRQ    = 1
 TFTP_WRQ    = 2

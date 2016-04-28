@@ -40,7 +40,7 @@ class GuiEventLoop(BaseEventLoop):
         new_future = futures.Future()
         future.add_done_callback(
             lambda future:
-                self.call_soon_threadsafe(new_future._copy_state, future))
+                self.call_soon_threadsafe(futures._copy_future_state, future, new_future))
         return new_future
 
     def run_until_complete(self, future, timeout=None):  # NEW!
