@@ -1,21 +1,28 @@
 start
 =====
 
-Monitoring and control program for various devices.
+Monitoring and control program.
 
 1. How to start:  
+'''
     git clone .../start.git  
-    ./make.sh submodule add [hm|misc|...]  
+    cd start
+    ./make.sh submodule add [hm|misc|...|all]
     python startall.py  
+'''
 
 Note:
-List of existing program extension modules is available on the project page at github.
-Script make.sh simply adds submodule to the source tree, it's also possible to
-download and add them manually. Here's a command that adds all submodules:
+Program has support for external modules that add various devices.
+Script make.sh can be used to add various submodules....
+Here's a command that adds all submodules (available for the moment):
+'''
 ./make.sh submodule add all
+'''
 
-2. Program requires python3.4 and some extra python modules. How to prepare python environment:
-    virtualenv -p python3.4 py34env
-    source py34env/bin/activate
-    pip install -r start/requirements.txt --pre
+2. Program requires python3.5 and some extra python modules. How to prepare python environment:
+'''
+    virtualenv -p python3 py3env
+    source py3env/bin/activate
+    pip install -r start/requirements.txt
+'''
 

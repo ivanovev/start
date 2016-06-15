@@ -1,40 +1,30 @@
 @echo off
 Setlocal EnableDelayedExpansion
 set name=start
-set srcdir=C:\Share\start
-set srctgz="%srcdir%\%name%.tgz"
-set srctar=%name%.tar
+set srcdir=C:\Share\%name%
 set s7z="C:\Program Files\7-Zip\7z.exe"
-set cxfreeze="C:\Python34\Scripts\cxfreeze.bat"
+set pyinst="C:\Python35\Scripts\pyinstaller.exe"
 
-rem rmdir /S /Q freeze
-rem del "%srcdir%\*.7z"
-
-rem %s7z% x "%srctgz%" -ofreeze
-rem cd freeze
-rem %s7z% x "%srctar%"
+rmdir /S /Q build dist __pycache__
 
 set all=hm br fio tmb all
 set /p id="%all%: " %=%
 if not "%id%" == "all" (
 	set all=%id%
 )
-set allmodules=
-for /f %%i in ('dir /b /o:n /ad') do set allmodules=!allmodules!,%%i
-set allmodules=%allmodules:~1%
-echo %allmodules%
-set modules=
+set hiddenimport=
+for /f %%i in ('dir /b /o:n /ad') do set hiddenimport=!hiddenimport! --hiddenimport %%i
 for %%a in (%all%) do (
 	if not "%%a" == "all" (
 		copy %%a\start%%a.py start%%a.py
-		set modules=%%a
+		set import=--hiddenimport ctl
 	) else (
-		set modules=%allmodules%
+		set import=%hiddenimport%
 	)
-	cmd /C %cxfreeze% start%%a.py --include-modules=!modules! --target-dir=dist%%a
+	cmd /C %pyinst% --onefile !import! start%%a.py
 	del /F "%srcdir%\%%a.7z"
-	cd dist%%a
-	%s7z% a "%srcdir%\%%a.7z" *
+	cd dist
+	%s7z% a "%srcdir%\%%a.7z" start%%a.exe
 	cd ..
 )
 pause
