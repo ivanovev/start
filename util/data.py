@@ -318,14 +318,13 @@ class Data(list):
             dev = self.get_dev(k)
             srv = dev[c_server] if c_server in dev else None
             obj = Obj(cmdid=k, dev=dev, srv=srv)
-            if not read:
-                val = self.get_value(k)
-                if val == '': continue
-                if v.fmt_cb:
-                    val = v.fmt_cb(val, read)
-                if type(val) == int: val = str(val)
-                if not val:
-                    continue
+            val = self.get_value(k)
+            if type(val) == int:
+                val = str(val)
+            if not read and not val:
+                continue
+            if v.fmt_cb:
+                val = v.fmt_cb(val, read)
             if v.cmd_cb:
                 cmd = v.cmd_cb(dev, cmd, val)
             elif val != None:

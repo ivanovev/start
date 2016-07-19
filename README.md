@@ -24,6 +24,6 @@ How to prepare python environment:
 ```
     virtualenv -p python3 py3env
     source py3env/bin/activate
-    pip install -r start/requirements.txt
+    pip install -r start/requirements
 ```
 
