@@ -46,13 +46,16 @@ class PlotData(Data):
 
     def filter_cmds(self, cmdtype):
         for cmds in self:
+            pop = []
             for k,v in cmds.items():
                 if not v.send:
-                    cmds.pop(k)
+                    pop.append(k)
                     continue
                 if v.wdgt != cmdtype:
-                    cmds.pop(k)
+                    pop.append(k)
                     continue
+            for k in pop:
+                cmds.pop(k)
 
     def update_label(self, k = None):
         cmds = self.cmds

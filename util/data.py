@@ -328,7 +328,8 @@ class Data(list):
             if v.cmd_cb:
                 cmd = v.cmd_cb(dev, cmd, val)
             elif val != None:
-                cmd = ' '.join([cmd, val])
+                if not read:
+                    cmd = ' '.join([cmd, val])
             if v.io_cb:
                 cmd = v.io_cb(dev, cmd)
             cc = cmd.split(' ', 1)
